@@ -29,10 +29,7 @@ define(['StatCalculator'], function(StatCalculator) {
       if (this.status === 401) {
         callback(this.status);
       } else {
-        //var data = JSON.parse(response.target.response);
-        console.log(response);
         callback(response);
-
       }
     }
   };

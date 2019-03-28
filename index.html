@@ -75,9 +75,7 @@
 						eventArray.push(event);
 						iteratingDate.setDate(iteratingDate.getDate() + 1);
 					}
-					console.log(eventArray);
 				}
-
 
 				React.renderComponent(JiraStatisticsCompilerPanel({jiraId: jiraId, events: eventArray}), document.getElementById('main'));
 				var issueHandler = new IssueHandler();

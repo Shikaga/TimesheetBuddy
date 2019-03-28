@@ -35,6 +35,7 @@ define(['lib/react'], function(React) {
 			}
 			this.props.events.forEach(function(event, index) {
 				dateCells.push(React.DOM.td({}, event.date.getDate()+"/"+(event.date.getMonth()+1)+"/"+(event.date.getYear()+1900)));
+				// debugger;
 				event.statusChanges.forEach(function(status, statusIndex) {
 					statusRows[statusIndex].props.children[index] = React.DOM.td(getEventClassName(event), status);
 				})
