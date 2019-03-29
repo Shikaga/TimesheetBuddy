@@ -43,9 +43,8 @@ define(['lib/react', 'LoginPanel', 'TimelinePanel', 'StatCalculator'], function(
               if (fieldChanged.field=="assignee") {
                 for (var i=0; i < window.last10days.length; i++) {
                   if (window.sameDay(window.last10days[i].date, new Date(Date.parse(change.created)))) {
-                    
-                    window.last10days[i].events[issue.key+" "+issue.fields.customfield_11670] = window.last10days[i].events[issue.key+" "+issue.fields.customfield_11670] || [];
-                    window.last10days[i].events[issue.key+" "+issue.fields.customfield_11670].push({
+                    window.last10days[i].events[issue.key+":"+issue.fields.summary+" - "+issue.fields.customfield_11670] = window.last10days[i].events[issue.key+":"+issue.fields.summary+" - "+issue.fields.customfield_11670] || [];
+                    window.last10days[i].events[issue.key+":"+issue.fields.summary+" - "+issue.fields.customfield_11670].push({
                       toString: function() {return  this.event + " - " + this.time.getHours() + ":" + this.time.getMinutes()},
                       event: fieldChanged.from + " -> " + fieldChanged.to,
                       time: new Date(Date.parse(change.created))
@@ -57,8 +56,8 @@ define(['lib/react', 'LoginPanel', 'TimelinePanel', 'StatCalculator'], function(
               if (fieldChanged.field=="status") {
                 for (var i=0; i < window.last10days.length; i++) {
                   if (window.sameDay(window.last10days[i].date, new Date(Date.parse(change.created)))) {
-                    window.last10days[i].events[issue.key+" "+issue.fields.customfield_11670] = window.last10days[i].events[issue.key+" "+issue.fields.customfield_11670] || [];
-                    window.last10days[i].events[issue.key+" "+issue.fields.customfield_11670].push({
+                    window.last10days[i].events[issue.key+":"+issue.fields.summary+" - "+issue.fields.customfield_11670] = window.last10days[i].events[issue.key+":"+issue.fields.summary+" - "+issue.fields.customfield_11670] || [];
+                    window.last10days[i].events[issue.key+":"+issue.fields.summary+" - "+issue.fields.customfield_11670].push({
                       toString: function() {return  this.event + " - " + this.time.getHours() + ":" + this.time.getMinutes()},
                       event: fieldChanged.fromString + " -> " + fieldChanged.toString,
                       time: new Date(Date.parse(change.created))
