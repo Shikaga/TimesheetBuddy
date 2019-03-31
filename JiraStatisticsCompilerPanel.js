@@ -38,22 +38,33 @@ define(['lib/react', 'LoginPanel', 'TimelinePanel', 'StatCalculator'], function(
           console.log("Total issues worked on in last 10 days:", data.issues.length);
           console.log("Issues you have worked on in last 10 days:", yourData.length);
           yourData.map(function(issue) {
+            for (var i=0; i < issue.changelog.histories.length; i++) {
+              if (issue.changelog.histories[i].items.filter(function(item) {return item.field == "status"}).length > 0) {
+              } 
+              else {
+                if (issue.changelog.histories[i-1] && issue.changelog.histories[i-1].items.filter(function(item) {return item.field == "status"}).length > 0) {
+                  issue.changelog.histories[i].items.push(
+                    {field: "status", 
+                    fromString: issue.changelog.histories[i-1].items.filter(function(item) {return item.field == "status"}).map(function(item) {return item.fromString})[0],
+                    toString: issue.changelog.histories[i-1].items.filter(function(item) {return item.field == "status"}).map(function(item) {return item.toString})[0]
+                    })
+                }
+              }
+              if (issue.changelog.histories[i].items.filter(function(item) {return item.field == "assignee"}).length > 0) {
+              } 
+              else {
+                if (issue.changelog.histories[i-1] && issue.changelog.histories[i-1].items.filter(function(item) {return item.field == "assignee"}).length > 0) {
+                  issue.changelog.histories[i].items.push(
+                    {field: "assignee", 
+                    from: issue.changelog.histories[i-1].items.filter(function(item) {return item.field == "assignee"}).map(function(item) {return item.from})[0],
+                    to: issue.changelog.histories[i-1].items.filter(function(item) {return item.field == "assignee"}).map(function(item) {return item.to})[0]
+                    })
+                }
+              }
+            }
           issue.changelog.histories.map(function(change) {
             change.items.map(function(fieldChanged) {
-              if (fieldChanged.field=="assignee") {
-                for (var i=0; i < window.last10days.length; i++) {
-                  if (window.sameDay(window.last10days[i].date, new Date(Date.parse(change.created)))) {
-                    window.last10days[i].events[issue.key+":"+issue.fields.summary+" - "+issue.fields.customfield_11670] = window.last10days[i].events[issue.key+":"+issue.fields.summary+" - "+issue.fields.customfield_11670] || [];
-                    window.last10days[i].events[issue.key+":"+issue.fields.summary+" - "+issue.fields.customfield_11670].push({
-                      toString: function() {return  this.event + " - " + this.time.getHours() + ":" + this.time.getMinutes()},
-                      event: fieldChanged.from + " -> " + fieldChanged.to,
-                      time: new Date(Date.parse(change.created))
-                    })
-                  }
-                }
-                
-              }
-              if (fieldChanged.field=="status") {
+              if (fieldChanged.field=="status" && change.items.filter(function(item) {return item.field == "assignee"})[0] && change.items.filter(function(item) {return item.field == "assignee"})[0].to == user) {
                 for (var i=0; i < window.last10days.length; i++) {
                   if (window.sameDay(window.last10days[i].date, new Date(Date.parse(change.created)))) {
                     window.last10days[i].events[issue.key+":"+issue.fields.summary+" - "+issue.fields.customfield_11670] = window.last10days[i].events[issue.key+":"+issue.fields.summary+" - "+issue.fields.customfield_11670] || [];
