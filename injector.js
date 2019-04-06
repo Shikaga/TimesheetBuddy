@@ -2,6 +2,21 @@ function insertAfter(referenceNode, newNode) {
     referenceNode.parentNode.insertBefore(newNode, referenceNode.nextSibling);
 }
 
+var monthMap = {
+    "Jan": "January",
+    "Feb": "February",
+    "Mar": "March",
+    "Apr": "April",
+    "May": "May",
+    "Jun": "June",
+    "Jul": "July",
+    "Aug": "August",
+    "Sep": "September",
+    "Oct": "October",
+    "Nov": "November",
+    "Dec": "December"
+}
+
 var tableElements = document.getElementById('timesheettable').children;
 var firstTimeSheetRow = tableElements[3];
 var client = firstTimeSheetRow.children[0].children[2].innerText;
@@ -18,7 +33,7 @@ for (var i=7; i < 14; i++) {
         var day = element.children[0].children[2].innerHTML;
         var month = element.children[0].children[1].innerHTML;
         var year = "20" + element.children[0].children[0].innerHTML;
-        return function() {alert(day + " " + month + " " + year + " was just cliked")};
+        return function() {alert(day + " " + monthMap[month] + " " + year + " was just cliked")};
     }()
 }
 
