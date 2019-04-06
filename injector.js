@@ -63,7 +63,21 @@ function getRowInfo(rowId) {
     var phase = row.children[0].children[3].innerText;
     var stage = row.children[0].children[4].innerText;
     var project = row.children[1].children[0].children[0].value
-    return {client, phase, stage, project};
+    var currentValues = [];
+    for (var i=7; i < 14; i++) {
+        currentValues.push(row.children[0].children[i].children[2].children[0].value)
+    }
+    return {client, phase, stage, project, currentValues};
+}
+
+function setRowData(rowId, data) {
+    var tableElements = document.getElementById('timesheettable').children;
+    var row = tableElements[rowId];
+    for (var i=0; i < 7; i++) {
+        if (data[i]) {
+            row.children[0].children[7+i].children[2].children[0].value = data[i];
+        }
+    }
 }
 
 function addCardsToRow(rowId) {
@@ -90,7 +104,16 @@ function addCardsToRow(rowId) {
 
 addClickEventsToDate();
 addCardsToRow(3);
-
+console.log(getRowInfo(3));
+setRowData(3, [
+    null,
+    2,
+    null,
+    4,
+    null, 
+    null,
+    null
+]);
 
 
 
