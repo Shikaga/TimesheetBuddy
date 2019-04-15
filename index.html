@@ -1,89 +1,126 @@
 <html>
-	<head>
-		<title>Timesheet Buddy</title>
-		<meta name="viewport" content="width=device-width, initial-scale=1.0 user-scalable=no" />
-		<link href="lib/bootstrap-3.2.0-dist/css/bootstrap.css" rel="stylesheet">
-		<script src="lib/require.js"></script>
-	</head>
-	<body>
-		<div>
-			Just drag this 
-				<a href="javascript:(function()%7Bwindow.damJSDomain%3D%27http://localhost:8080%27%3Bvar s %3D document.createElement(%27script%27)%3Bs.src %3D damJSDomain %2B %27/injector.js%27%3Bdocument.getElementsByTagName(%27head%27)%5B0%5D.appendChild(s)%3B%7D)()">Timesheet Buddy</a>
-				url onto your bookmarks bar!</div>
-		<div id="main"></div>
-		<script type="text/javascript">
-			function parseDate(dateTimeString) {
-				var dateString = dateTimeString.substr(0,dateTimeString.indexOf("T"));
-				var dateArray = dateString.split("-");
-				var date = new Date(dateArray[0],dateArray[1]-1,dateArray[2]);
-				return date;
-			}
-		</script>
+  <head>
+    <title>Timesheet Buddy</title>
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0 user-scalable=no"
+    />
+    <link href="lib/bootstrap-3.2.0-dist/css/bootstrap.css" rel="stylesheet" />
+    <script src="lib/require.js"></script>
+  </head>
+  <body>
+    <div>
+      Just drag this
+      <a
+        href="javascript:(function()%7Bwindow.damJSDomain%3D%27https://shikaga.github.io/TimesheetBuddy%27%3Bvar s %3D document.createElement(%27script%27)%3Bs.src %3D damJSDomain %2B %27/injector.js%27%3Bdocument.getElementsByTagName(%27head%27)%5B0%5D.appendChild(s)%3B%7D)()"
+        >Timesheet Buddy</a
+      >
+      url onto your bookmarks bar!
+    </div>
+    <div id="main"></div>
+    <script type="text/javascript">
+      function parseDate(dateTimeString) {
+        var dateString = dateTimeString.substr(0, dateTimeString.indexOf("T"));
+        var dateArray = dateString.split("-");
+        var date = new Date(dateArray[0], dateArray[1] - 1, dateArray[2]);
+        return date;
+      }
+    </script>
 
-		<script>
-			require(['lib/react', 'JiraStatisticsCompilerPanel', 'StatCalculator', 'IssueHandler'], function(React, JiraStatisticsCompilerPanel, StatisticsCalculator, IssueHandler) {
-				comments = localStorage.comments ? JSON.parse(localStorage.comments) : {};
-				statisticsCalculator = null;
-				if (window.localStorage.getItem("jiraData") && JSON.parse(window.localStorage.getItem("jiraData")).issues) {
-					statisticsCalculator = new StatisticsCalculator(JSON.parse(window.localStorage.getItem("jiraData")).issues);
-				}
-				function populateStatusEvent(event, change) {
-					if (change.items) {
-						change.items.forEach(function(item) {
-							if (item.field === "status") {
-								event.statusChanges.push(item.toString);
-							}
-						})
-					}
-				}
+    <script>
+      require([
+        "lib/react",
+        "JiraStatisticsCompilerPanel",
+        "StatCalculator",
+        "IssueHandler"
+      ], function(
+        React,
+        JiraStatisticsCompilerPanel,
+        StatisticsCalculator,
+        IssueHandler
+      ) {
+        comments = localStorage.comments
+          ? JSON.parse(localStorage.comments)
+          : {};
+        statisticsCalculator = null;
+        if (
+          window.localStorage.getItem("jiraData") &&
+          JSON.parse(window.localStorage.getItem("jiraData")).issues
+        ) {
+          statisticsCalculator = new StatisticsCalculator(
+            JSON.parse(window.localStorage.getItem("jiraData")).issues
+          );
+        }
+        function populateStatusEvent(event, change) {
+          if (change.items) {
+            change.items.forEach(function(item) {
+              if (item.field === "status") {
+                event.statusChanges.push(item.toString);
+              }
+            });
+          }
+        }
 
-				function populateComments(event, comment) {
-					if (comment.body.indexOf("Call:") !== -1 || comment.body.indexOf("Onsite:") !== -1 ) {
-						event.comments.push(comment.body);
-					} else {
-//						console.log(comment.body);
-					}
-				}
+        function populateComments(event, comment) {
+          if (
+            comment.body.indexOf("Call:") !== -1 ||
+            comment.body.indexOf("Onsite:") !== -1
+          ) {
+            event.comments.push(comment.body);
+          } else {
+            //						console.log(comment.body);
+          }
+        }
 
-				function populateEvent(event) {
-					var issueChanges = statisticsCalculator.issueArray[0].changelog.histories;
-					for (var i=0; i < issueChanges.length; i++) {
-						if (parseDate(issueChanges[i].created).getTime() === event.date.getTime()) {
-							populateStatusEvent(event, issueChanges[i]);
-						}
-					}
-					for (var i=0; i < comments.comments.length; i++) {
-						var comment = comments.comments[i];
-						if (parseDate(comment.created).getTime() === event.date.getTime()) {
-							populateComments(event, comment);
-						}
-					}
-				}
+        function populateEvent(event) {
+          var issueChanges =
+            statisticsCalculator.issueArray[0].changelog.histories;
+          for (var i = 0; i < issueChanges.length; i++) {
+            if (
+              parseDate(issueChanges[i].created).getTime() ===
+              event.date.getTime()
+            ) {
+              populateStatusEvent(event, issueChanges[i]);
+            }
+          }
+          for (var i = 0; i < comments.comments.length; i++) {
+            var comment = comments.comments[i];
+            if (parseDate(comment.created).getTime() === event.date.getTime()) {
+              populateComments(event, comment);
+            }
+          }
+        }
 
-				var eventArray = [];
-				if (statisticsCalculator && statisticsCalculator.issueArray) {
-					var jiraId = statisticsCalculator.issueArray[0].key;
-					var issueChanges = statisticsCalculator.issueArray[0].changelog.histories;
-					var issueCreated = parseDate(issueChanges[0].created);
-					var issueLastUpdate = parseDate(issueChanges[issueChanges.length-1].created);
+        var eventArray = [];
+        if (statisticsCalculator && statisticsCalculator.issueArray) {
+          var jiraId = statisticsCalculator.issueArray[0].key;
+          var issueChanges =
+            statisticsCalculator.issueArray[0].changelog.histories;
+          var issueCreated = parseDate(issueChanges[0].created);
+          var issueLastUpdate = parseDate(
+            issueChanges[issueChanges.length - 1].created
+          );
 
-					var iteratingDate =new Date(issueCreated.getTime());
+          var iteratingDate = new Date(issueCreated.getTime());
 
-					while(iteratingDate <= issueLastUpdate) {
-						var event = {};
-						event.date = new Date(iteratingDate.getTime());
+          while (iteratingDate <= issueLastUpdate) {
+            var event = {};
+            event.date = new Date(iteratingDate.getTime());
 
-						event.statusChanges = [];
-						event.comments = [];
-						populateEvent(event);
-						eventArray.push(event);
-						iteratingDate.setDate(iteratingDate.getDate() + 1);
-					}
-				}
+            event.statusChanges = [];
+            event.comments = [];
+            populateEvent(event);
+            eventArray.push(event);
+            iteratingDate.setDate(iteratingDate.getDate() + 1);
+          }
+        }
 
-				React.renderComponent(JiraStatisticsCompilerPanel({jiraId: jiraId, events: eventArray}), document.getElementById('main'));
-				var issueHandler = new IssueHandler();
-			});
-		</script>
-	</body>
+        React.renderComponent(
+          JiraStatisticsCompilerPanel({ jiraId: jiraId, events: eventArray }),
+          document.getElementById("main")
+        );
+        var issueHandler = new IssueHandler();
+      });
+    </script>
+  </body>
 </html>
