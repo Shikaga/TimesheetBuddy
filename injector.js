@@ -43,13 +43,14 @@ function addClickEventsToDate() {
 }
 
 function getCardDiv(jiraId, jiraSummary, timeElapsed, duration, status) {
-    var newJiraTicket = document.createElement('div');
-    newJiraTicket.style = "float: left; display:inline-block; margin: 10px; width: 200px; overflow:hidden; border: 1px solid black; padding: 5px;";
-    
-    var topRow = document.createElement('div');
-    topRow.innerHTML = jiraId + " - " + timeElapsed;
-    var middleRow = document.createElement('div');
-    middleRow.style= "width: 200px; white-space: normal;"
+  var newJiraTicket = document.createElement("div");
+  newJiraTicket.style =
+    "float: left; display:inline-block; margin: 10px; width: 200px; overflow:hidden; border: 1px solid black; padding: 5px;";
+
+  var topRow = document.createElement("div");
+  topRow.innerHTML = `<a href="https://jira.caplin.com/browse/${jiraId}" target="_blank">${jiraId}</a> - ${timeElapsed}`;
+  var middleRow = document.createElement("div");
+  middleRow.style = "width: 200px; white-space: normal;";
     middleRow.innerHTML = jiraSummary;
     var bottomRow = document.createElement('div');
     bottomRow.innerHTML = duration + " - " + status;
