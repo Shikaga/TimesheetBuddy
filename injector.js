@@ -312,13 +312,13 @@ setAuthorizationHeader = function(xhr, username, password) {
 }
 
 addClickEventsToDate();
-setRowData(3, [
-    null,
-    2,
-    null,
-    4,
-    null, 
-    null,
-    null
-]);
+// setRowData(3, [
+//     null,
+//     2,
+//     null,
+//     4,
+//     null, 
+//     null,
+//     null
+// ]);
 addLoginPanel();
