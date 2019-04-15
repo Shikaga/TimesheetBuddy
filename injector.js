@@ -78,6 +78,9 @@ function getRowInfo(rowId) {
         if (!row.children[0].children[i].children[2]) {
             return null;
         }
+        if (!row.children[0].children[i].children[2].children[0]) {
+            return null;
+        }
         currentValues.push(row.children[0].children[i].children[2].children[0].value)
     }
     return {client, phase, stage, project, currentValues};
