@@ -1,16 +1,16 @@
 var newScript = document.createElement("script");
 newScript.type = "text/javascript";
-newScript.src = "http://jtmcaplin.github.io/timesheetbuddy/utils/DataExtractor.js";
+newScript.src = "https://jtmcaplin.github.io/TimesheetBuddy/utils/DataExtractor.js";
 document.getElementsByTagName("head")[0].appendChild(newScript);
 
 newScript = document.createElement("script");
 newScript.type = "text/javascript";
-newScript.src = "http://jtmcaplin.github.io/timesheetbuddy/utils/DataConverter.js";
+newScript.src = "https://jtmcaplin.github.io/TimesheetBuddy/utils/DataConverter.js";
 document.getElementsByTagName("head")[0].appendChild(newScript);
 
 newScript = document.createElement("script");
 newScript.type = "text/javascript";
-newScript.src = "http://jtmcaplin.github.io/timesheetbuddy/utils/statuses.js";
+newScript.src = "https://jtmcaplin.github.io/TimesheetBuddy/utils/statuses.js";
 document.getElementsByTagName("head")[0].appendChild(newScript);
 
 var months = {
