@@ -1,4 +1,4 @@
-export default class DataConverter {
+class DataConverter {
   constructor() {}
 
   processDataForDay(data, day) {

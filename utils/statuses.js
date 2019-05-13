@@ -1,5 +1,5 @@
-export const inQa = "In Progress: QA/Test";
-export const inDev = "In Progress: Development";
-export const codeReview = "Code Review";
+const inQa = "In Progress: QA/Test";
+const inDev = "In Progress: Development";
+const codeReview = "Code Review";
 
-export const trackedStatuses = [inQa, inDev, codeReview];
+const trackedStatuses = [inQa, inDev, codeReview];

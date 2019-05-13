@@ -1,6 +1,7 @@
-import { trackedStatuses } from "./statuses";
+// import { trackedStatuses } from "./statuses";
 
-export default class DataExtractor {
+// export default class DataExtractor {
+class DataExtractor {
   constructor() {}
 
   getUserData(responseData, user) {
