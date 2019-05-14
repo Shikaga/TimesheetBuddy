@@ -288,7 +288,7 @@ function setAllData(data) {
 }
 
 function handleResponse(response, user) {
-  var extrator = new DataExtractor();
+  var extrator = new DataExtractor(new Date());
   window.sameDay = function(d1, d2) {
     return (
       d1.getFullYear() === d2.getFullYear() &&
