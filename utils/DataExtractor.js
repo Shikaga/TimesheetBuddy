@@ -2,7 +2,9 @@
 
 // export default class DataExtractor {
 class DataExtractor {
-  constructor() {}
+  constructor(currentTime) {
+    this.currentTime = currentTime;
+  }
 
   getUserData(responseData, user) {
     return responseData.issues.filter(function(issue) {
@@ -194,6 +196,18 @@ class DataExtractor {
         }
       }
     }
+
+    this.addRowNewAssignee(
+      rows,
+      user,
+      currentAssignee,
+      currentAssigneeStart,
+      currentStatus,
+      currentStatusStart,
+      null,
+      this.currentTime
+    );
+
     return rows.map(row => {
       return {
         ...row,
