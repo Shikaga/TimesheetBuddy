@@ -123,9 +123,10 @@ function setRowData(rowId, data) {
   var tableElements = document.getElementById("timesheettable").children;
   var row = tableElements[rowId];
   for (var i = 0; i < 7; i++) {
+    const box = row.children[0].children[7 + i].children[2].children[0];
     if (data[i]) {
-      row.children[0].children[7 + i].children[2].children[0].value =
-        Math.round(data[i] * 100) / 100;
+      box.value = Math.round(data[i] * 100) / 100;
+      Data_ChangedW(box);
     }
   }
 }
