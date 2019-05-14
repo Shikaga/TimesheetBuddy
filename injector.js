@@ -1,3 +1,33 @@
+var newScript = document.createElement("script");
+newScript.type = "text/javascript";
+newScript.src = "http://localhost:8000/utils/DataExtractor.js";
+document.getElementsByTagName("head")[0].appendChild(newScript);
+
+newScript = document.createElement("script");
+newScript.type = "text/javascript";
+newScript.src = "http://localhost:8000/utils/DataConverter.js";
+document.getElementsByTagName("head")[0].appendChild(newScript);
+
+newScript = document.createElement("script");
+newScript.type = "text/javascript";
+newScript.src = "http://localhost:8000/utils/statuses.js";
+document.getElementsByTagName("head")[0].appendChild(newScript);
+
+var months = {
+  Jan: 0,
+  Feb: 1,
+  Mar: 2,
+  Apr: 3,
+  May: 4,
+  Jun: 5,
+  Jul: 6,
+  Aug: 7,
+  Sep: 8,
+  Oct: 9,
+  Nov: 10,
+  Dec: 11
+};
+
 function insertAfter(referenceNode, newNode) {
   referenceNode.parentNode.insertBefore(newNode, referenceNode.nextSibling);
 }
@@ -68,7 +98,7 @@ function getRowInfo(rowId) {
     return null;
   }
   var client = row.children[0].children[2].innerText;
-  var phase = row.children[0].children[3].innerText;
+  var phase = row.children[0].children[3].innerText.replace("Open in tab", "");
   var stage = row.children[0].children[4].innerText;
   if (!row.children[1]) {
     return null;
@@ -94,7 +124,8 @@ function setRowData(rowId, data) {
   var row = tableElements[rowId];
   for (var i = 0; i < 7; i++) {
     if (data[i]) {
-      row.children[0].children[7 + i].children[2].children[0].value = data[i];
+      row.children[0].children[7 + i].children[2].children[0].value =
+        Math.round(data[i] * 100) / 100;
     }
   }
 }
@@ -209,7 +240,55 @@ function loadData(username, password, projectIds) {
   );
 }
 
+function getDays() {
+  var columns = document
+    .getElementById("timesheettable")
+    .children[0].children[1].querySelectorAll(".no-sort");
+  var dayColumns = [];
+  for (let i = 0; i < columns.length; i++) {
+    if (columns[i].querySelector(".date-wrapper")) {
+      dayColumns.push(columns[i].querySelector(".date-wrapper"));
+    }
+  }
+
+  var days = [];
+  for (let j = 0; j < dayColumns.length; j++) {
+    var year = parseInt(dayColumns[j].children[0].innerText) + 2000;
+    var month = months[dayColumns[j].children[1].innerText];
+    var date = parseInt(dayColumns[j].children[2].innerText);
+    days.push(new Date(year, month, date));
+  }
+  return days;
+}
+
+function getAllData(data, days) {
+  var converter = new DataConverter();
+  var dayData = [];
+  for (let i = 0; i < 5; i++) {
+    var day = days[i];
+    dayData.push(converter.processDataForDay(data, day));
+  }
+  return dayData;
+}
+
+function setAllData(data) {
+  var rowNum = document.getElementById("timesheettable").children.length;
+  for (let i = 0; i < rowNum; i++) {
+    var row = getRowInfo(i);
+    if (row) {
+      var code =
+        row.phase + " " + row.client + " - " + row.project + "-" + row.stage;
+      var timeData = [];
+      for (let j = 0; j < data.length; j++) {
+        timeData.push(data[j].get(code));
+      }
+      setRowData(i, timeData);
+    }
+  }
+}
+
 function handleResponse(response, user) {
+  var extrator = new DataExtractor(new Date());
   window.sameDay = function(d1, d2) {
     return (
       d1.getFullYear() === d2.getFullYear() &&
@@ -237,6 +316,12 @@ function handleResponse(response, user) {
     }
     return false;
   });
+
+  var extractedData = extrator.extractData(yourData, user);
+  var days = getDays();
+  var dayData = getAllData(extractedData, days);
+  setAllData(dayData);
+
   console.log("Total issues worked on in last 10 days:", data.issues.length);
   console.log("Issues you have worked on in last 10 days:", yourData.length);
   yourData.map(function(issue) {
@@ -467,5 +552,5 @@ setAuthorizationHeader = function(xhr, username, password) {
 };
 
 addClickEventsToDate();
-setRowData(3, [null, 2, null, 4, null, null, null]);
+// setRowData(3, [null, 2, null, 4, null, null, null]);
 addLoginPanel();
