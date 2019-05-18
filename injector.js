@@ -1,16 +1,16 @@
 var newScript = document.createElement("script");
 newScript.type = "text/javascript";
-newScript.src = "http://localhost:8080/utils/DataExtractor.js";
+newScript.src = window.damJSDomain + "utils/DataExtractor.js";
 document.getElementsByTagName("head")[0].appendChild(newScript);
 
 newScript = document.createElement("script");
 newScript.type = "text/javascript";
-newScript.src = "http://localhost:8080/utils/DataConverter.js";
+newScript.src = window.damJSDomain + "utils/DataConverter.js";
 document.getElementsByTagName("head")[0].appendChild(newScript);
 
 newScript = document.createElement("script");
 newScript.type = "text/javascript";
-newScript.src = "http://localhost:8080/utils/statuses.js";
+newScript.src = window.damJSDomain + "utils/statuses.js";
 document.getElementsByTagName("head")[0].appendChild(newScript);
 
 var months = {
@@ -238,7 +238,7 @@ function addLoginPanel() {
 function loadData(username, password, projectIds) {
   getDataWithJSON(
     function(response) {
-      handleResponse(response, "andrewv"); //change this when testing
+      handleResponse(response, username); //change this when testing
     },
     username,
     password,
@@ -281,6 +281,25 @@ function getAllData(data, days) {
     dayData.push(converter.processDataForDay(data, day));
   }
   return dayData;
+}
+
+function checkRowExistsForAllCode(codes) {
+  var rowNum = document.getElementById("timesheettable").children.length;
+  var allCodesAdded = [];
+  for (let i = 0; i < rowNum; i++) {
+    var row = getRowInfo(i);
+    if (row) {
+      allCodesAdded.push(row.phase + " " + row.client + " - " + row.project + "-" + row.stage);
+    }
+  }
+  Array.from(codes).forEach(function(e) {
+    if (allCodesAdded.includes("CAPLINTR.001 Caplin - Caplin Trader-Maintenance")) {
+
+    } else {
+      console.log("This code is missing:", e)
+      alert(("The following code is missing, check console: " + e))
+    }
+  })
 }
 
 function setAllData(data) {
@@ -353,6 +372,13 @@ function handleResponse(response, user) {
   var extractedData = extrator.extractData(yourData, user);
   var days = getDays();
   var dayData = getAllData(extractedData, days);
+  uniqueCodes = dayData.reduce((a,b) => a.concat(a.concat([...b.keys()])), []).reduce(function(set, obj) {
+    set.add(obj)
+    return set;
+  }, new Set());
+  uniqueCodes.delete(null);
+  checkRowExistsForAllCode(uniqueCodes);
+
   setAllData(dayData);
 
   console.log("Total issues worked on in last 10 days:", data.issues.length);
