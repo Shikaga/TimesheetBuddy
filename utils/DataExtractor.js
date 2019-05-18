@@ -151,7 +151,8 @@ class DataExtractor {
 
     const jiraSum = {
       timesheetCode: jira.fields.customfield_11670,
-      summary: jira.fields.summary
+      summary: jira.fields.summary,
+      id: jira.key
     };
     const rows = [];
 

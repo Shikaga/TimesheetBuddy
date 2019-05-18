@@ -1,16 +1,16 @@
 var newScript = document.createElement("script");
 newScript.type = "text/javascript";
-newScript.src = "http://localhost:8000/utils/DataExtractor.js";
+newScript.src = "http://localhost:8080/utils/DataExtractor.js";
 document.getElementsByTagName("head")[0].appendChild(newScript);
 
 newScript = document.createElement("script");
 newScript.type = "text/javascript";
-newScript.src = "http://localhost:8000/utils/DataConverter.js";
+newScript.src = "http://localhost:8080/utils/DataConverter.js";
 document.getElementsByTagName("head")[0].appendChild(newScript);
 
 newScript = document.createElement("script");
 newScript.type = "text/javascript";
-newScript.src = "http://localhost:8000/utils/statuses.js";
+newScript.src = "http://localhost:8080/utils/statuses.js";
 document.getElementsByTagName("head")[0].appendChild(newScript);
 
 var months = {
@@ -72,8 +72,9 @@ function addClickEventsToDate() {
   }
 }
 
-function getCardDiv(jiraId, jiraSummary, timeElapsed, duration, status) {
+function getCardDiv(jiraId, jiraSummary, timeElapsed, duration, status, onclick) {
   var newJiraTicket = document.createElement("div");
+  newJiraTicket.onclick = onclick
   newJiraTicket.style =
     "float: left; display:inline-block; margin: 10px; width: 200px; overflow:hidden; border: 1px solid black; padding: 5px;";
 
@@ -128,6 +129,16 @@ function setRowData(rowId, data) {
       box.value = Math.round(data[i] * 100) / 100;
       Data_ChangedW(box);
     }
+  }
+}
+
+function setCellData(rowId, cellColumn, data) {
+  var tableElements = document.getElementById("timesheettable").children;
+  var row = tableElements[rowId];
+  const box = row.children[0].children[7 + cellColumn].children[2].children[0];
+  if (data[i]) {
+    box.value = Math.round(data[i] * 100) / 100;
+    Data_ChangedW(box);
   }
 }
 
@@ -227,7 +238,7 @@ function addLoginPanel() {
 function loadData(username, password, projectIds) {
   getDataWithJSON(
     function(response) {
-      handleResponse(response, username); //change this when testing
+      handleResponse(response, "andrewv"); //change this when testing
     },
     username,
     password,
@@ -281,11 +292,31 @@ function setAllData(data) {
         row.phase + " " + row.client + " - " + row.project + "-" + row.stage;
       var timeData = [];
       for (let j = 0; j < data.length; j++) {
-        timeData.push(data[j].get(code));
+        if (data[j].get(code)) {
+          timeData[j] = data[j].get(code).reduce((a,b) => a + b.hours, 0);
+          data[j].get(code).map(function(e) {
+            addCardFromData(i, e.jira.id, e.jira.summary, e.hours + "hrs", e.startTime+"-"+e.endTime, "statusTBD", i, "?")
+          })
+          
+        }
       }
       setRowData(i, timeData);
     }
   }
+}
+
+function addCardFromData(rowId, jiraId, jiraSummary, timeElapsed, duration, status, rowId, columnId) {
+  addCardsToRow(
+    rowId,
+    getCardDiv(
+      jiraId,
+      jiraSummary,
+      timeElapsed,
+      duration,
+      status,
+      function() {alert(timeElapsed + " : " + rowId + " : " + columnId)}
+    )
+  );
 }
 
 function handleResponse(response, user) {
@@ -325,133 +356,133 @@ function handleResponse(response, user) {
 
   console.log("Total issues worked on in last 10 days:", data.issues.length);
   console.log("Issues you have worked on in last 10 days:", yourData.length);
-  yourData.map(function(issue) {
-    for (var i = 0; i < issue.changelog.histories.length; i++) {
-      if (
-        issue.changelog.histories[i].items.filter(function(item) {
-          return item.field == "status";
-        }).length > 0
-      ) {
-      } else {
-        if (
-          issue.changelog.histories[i - 1] &&
-          issue.changelog.histories[i - 1].items.filter(function(item) {
-            return item.field == "status";
-          }).length > 0
-        ) {
-          issue.changelog.histories[i].items.push({
-            field: "status",
-            fromString: issue.changelog.histories[i - 1].items
-              .filter(function(item) {
-                return item.field == "status";
-              })
-              .map(function(item) {
-                return item.fromString;
-              })[0],
-            toString: issue.changelog.histories[i - 1].items
-              .filter(function(item) {
-                return item.field == "status";
-              })
-              .map(function(item) {
-                return item.toString;
-              })[0]
-          });
-        }
-      }
-      if (
-        issue.changelog.histories[i].items.filter(function(item) {
-          return item.field == "assignee";
-        }).length > 0
-      ) {
-      } else {
-        if (
-          issue.changelog.histories[i - 1] &&
-          issue.changelog.histories[i - 1].items.filter(function(item) {
-            return item.field == "assignee";
-          }).length > 0
-        ) {
-          issue.changelog.histories[i].items.push({
-            field: "assignee",
-            from: issue.changelog.histories[i - 1].items
-              .filter(function(item) {
-                return item.field == "assignee";
-              })
-              .map(function(item) {
-                return item.from;
-              })[0],
-            to: issue.changelog.histories[i - 1].items
-              .filter(function(item) {
-                return item.field == "assignee";
-              })
-              .map(function(item) {
-                return item.to;
-              })[0]
-          });
-        }
-      }
-    }
-    issue.changelog.histories.map(
-      function(change) {
-        change.items.map(
-          function(fieldChanged) {
-            if (
-              fieldChanged.field == "status" &&
-              change.items.filter(function(item) {
-                return item.field == "assignee";
-              })[0] &&
-              change.items.filter(function(item) {
-                return item.field == "assignee";
-              })[0].to == user
-            ) {
-              for (var i = 0; i < window.last10days.length; i++) {
-                if (
-                  window.sameDay(
-                    window.last10days[i].date,
-                    new Date(Date.parse(change.created))
-                  )
-                ) {
-                  window.last10days[i].events[
-                    issue.key +
-                      ":" +
-                      issue.fields.summary +
-                      ":" +
-                      issue.fields.customfield_11670
-                  ] =
-                    window.last10days[i].events[
-                      issue.key +
-                        ":" +
-                        issue.fields.summary +
-                        ":" +
-                        issue.fields.customfield_11670
-                    ] || [];
-                  window.last10days[i].events[
-                    issue.key +
-                      ":" +
-                      issue.fields.summary +
-                      ":" +
-                      issue.fields.customfield_11670
-                  ].push({
-                    toString: function() {
-                      return (
-                        this.event +
-                        " - " +
-                        this.time.getHours() +
-                        ":" +
-                        this.time.getMinutes()
-                      );
-                    },
-                    event:
-                      fieldChanged.fromString + " -> " + fieldChanged.toString,
-                    time: new Date(Date.parse(change.created))
-                  });
-                }
-              }
-            }
-          }.bind(this)
-        );
-      }.bind(this)
-    );
-  });
+  // yourData.map(function(issue) {
+  //   for (var i = 0; i < issue.changelog.histories.length; i++) {
+  //     if (
+  //       issue.changelog.histories[i].items.filter(function(item) {
+  //         return item.field == "status";
+  //       }).length > 0
+  //     ) {
+  //     } else {
+  //       if (
+  //         issue.changelog.histories[i - 1] &&
+  //         issue.changelog.histories[i - 1].items.filter(function(item) {
+  //           return item.field == "status";
+  //         }).length > 0
+  //       ) {
+  //         issue.changelog.histories[i].items.push({
+  //           field: "status",
+  //           fromString: issue.changelog.histories[i - 1].items
+  //             .filter(function(item) {
+  //               return item.field == "status";
+  //             })
+  //             .map(function(item) {
+  //               return item.fromString;
+  //             })[0],
+  //           toString: issue.changelog.histories[i - 1].items
+  //             .filter(function(item) {
+  //               return item.field == "status";
+  //             })
+  //             .map(function(item) {
+  //               return item.toString;
+  //             })[0]
+  //         });
+  //       }
+  //     }
+  //     if (
+  //       issue.changelog.histories[i].items.filter(function(item) {
+  //         return item.field == "assignee";
+  //       }).length > 0
+  //     ) {
+  //     } else {
+  //       if (
+  //         issue.changelog.histories[i - 1] &&
+  //         issue.changelog.histories[i - 1].items.filter(function(item) {
+  //           return item.field == "assignee";
+  //         }).length > 0
+  //       ) {
+  //         issue.changelog.histories[i].items.push({
+  //           field: "assignee",
+  //           from: issue.changelog.histories[i - 1].items
+  //             .filter(function(item) {
+  //               return item.field == "assignee";
+  //             })
+  //             .map(function(item) {
+  //               return item.from;
+  //             })[0],
+  //           to: issue.changelog.histories[i - 1].items
+  //             .filter(function(item) {
+  //               return item.field == "assignee";
+  //             })
+  //             .map(function(item) {
+  //               return item.to;
+  //             })[0]
+  //         });
+  //       }
+  //     }
+  //   }
+  //   issue.changelog.histories.map(
+  //     function(change) {
+  //       change.items.map(
+  //         function(fieldChanged) {
+  //           if (
+  //             fieldChanged.field == "status" &&
+  //             change.items.filter(function(item) {
+  //               return item.field == "assignee";
+  //             })[0] &&
+  //             change.items.filter(function(item) {
+  //               return item.field == "assignee";
+  //             })[0].to == user
+  //           ) {
+  //             for (var i = 0; i < window.last10days.length; i++) {
+  //               if (
+  //                 window.sameDay(
+  //                   window.last10days[i].date,
+  //                   new Date(Date.parse(change.created))
+  //                 )
+  //               ) {
+  //                 window.last10days[i].events[
+  //                   issue.key +
+  //                     ":" +
+  //                     issue.fields.summary +
+  //                     ":" +
+  //                     issue.fields.customfield_11670
+  //                 ] =
+  //                   window.last10days[i].events[
+  //                     issue.key +
+  //                       ":" +
+  //                       issue.fields.summary +
+  //                       ":" +
+  //                       issue.fields.customfield_11670
+  //                   ] || [];
+  //                 window.last10days[i].events[
+  //                   issue.key +
+  //                     ":" +
+  //                     issue.fields.summary +
+  //                     ":" +
+  //                     issue.fields.customfield_11670
+  //                 ].push({
+  //                   toString: function() {
+  //                     return (
+  //                       this.event +
+  //                       " - " +
+  //                       this.time.getHours() +
+  //                       ":" +
+  //                       this.time.getMinutes()
+  //                     );
+  //                   },
+  //                   event:
+  //                     fieldChanged.fromString + " -> " + fieldChanged.toString,
+  //                   time: new Date(Date.parse(change.created))
+  //                 });
+  //               }
+  //             }
+  //           }
+  //         }.bind(this)
+  //       );
+  //     }.bind(this)
+  //   );
+  // });
 
   window.days = [
     "Sunday",
@@ -477,57 +508,57 @@ function handleResponse(response, user) {
     "December"
   ];
 
-  window.last10days.map(function(day) {
-    console.log(
-      window.days[day.date.getDay()],
-      day.date.getDate(),
-      window.months[day.date.getMonth()]
-    );
-    Object.keys(day.events).forEach(function(jiraId, index) {
-      console.log(" ", jiraId);
-      var jira = day.events[jiraId];
-      jira.map(function(event) {
-        var rowId = getRowIdFromTimesheet(jiraId.split(":")[2]);
-        console.log(rowId, jira, jiraId);
-        if (rowId > -1) {
-          addCardsToRow(
-            rowId,
-            getCardDiv(
-              jiraId.split(":")[0],
-              jiraId.split(":")[1],
-              "???hrs",
-              event.time
-                .toString()
-                .split(" ")
-                .slice(0, 5)
-                .join(" ") + "-???",
-              event.event.split("->")[1].trim()
-            )
-          );
-        } else {
-          addCardsToRow(
-            0,
-            getCardDiv(
-              jiraId.split(":")[0],
-              jiraId.split(":")[1],
-              "???hrs",
-              event.time
-                .toString()
-                .split(" ")
-                .slice(0, 5)
-                .join(" ") + "-???",
-              event.event.split("->")[1].trim()
-            )
-          );
-        }
+  // window.last10days.map(function(day) {
+  //   console.log(
+  //     window.days[day.date.getDay()],
+  //     day.date.getDate(),
+  //     window.months[day.date.getMonth()]
+  //   );
+  //   Object.keys(day.events).forEach(function(jiraId, index) {
+  //     console.log(" ", jiraId);
+  //     var jira = day.events[jiraId];
+  //     jira.map(function(event) {
+  //       var rowId = getRowIdFromTimesheet(jiraId.split(":")[2]);
+  //       console.log(rowId, jira, jiraId);
+  //       if (rowId > -1) {
+  //         addCardsToRow(
+  //           rowId,
+  //           getCardDiv(
+  //             jiraId.split(":")[0],
+  //             jiraId.split(":")[1],
+  //             "???hrs",
+  //             event.time
+  //               .toString()
+  //               .split(" ")
+  //               .slice(0, 5)
+  //               .join(" ") + "-???",
+  //             event.event.split("->")[1].trim()
+  //           )
+  //         );
+  //       } else {
+  //         addCardsToRow(
+  //           0,
+  //           getCardDiv(
+  //             jiraId.split(":")[0],
+  //             jiraId.split(":")[1],
+  //             "???hrs",
+  //             event.time
+  //               .toString()
+  //               .split(" ")
+  //               .slice(0, 5)
+  //               .join(" ") + "-???",
+  //             event.event.split("->")[1].trim()
+  //           )
+  //         );
+  //       }
 
-        //   console.log(jiraId.split(":")[2]);
-        //   if (getRowInfo(5))
-        //   console.log(getRowInfo(5).phase + " " + getRowInfo(5).client + " - " + getRowInfo(5).project + "-" + getRowInfo(5).stage)
-        console.log("  ", event.toString());
-      });
-    });
-  });
+  //       //   console.log(jiraId.split(":")[2]);
+  //       //   if (getRowInfo(5))
+  //       //   console.log(getRowInfo(5).phase + " " + getRowInfo(5).client + " - " + getRowInfo(5).project + "-" + getRowInfo(5).stage)
+  //       console.log("  ", event.toString());
+  //     });
+  //   });
+  // });
 }
 
 getDataWithJSON = function(callback, username, password, requestUrl) {

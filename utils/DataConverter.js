@@ -11,9 +11,9 @@ class DataConverter {
         const code = row.jira.timesheetCode;
         if (hours > 0.08) {
           if (!hoursForCodes.get(code)) {
-            hoursForCodes.set(code, 0);
+            hoursForCodes.set(code, []);
           }
-          hoursForCodes.set(code, hoursForCodes.get(code) + hours);
+          hoursForCodes.get(code).push({hours, jira:row.jira, startTime: row.startTime, endTime: row.endTime});
         }
       }
     }
