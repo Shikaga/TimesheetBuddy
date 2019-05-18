@@ -74,7 +74,10 @@ function addClickEventsToDate() {
 
 function getCardDiv(jiraId, jiraSummary, timeElapsed, duration, status, onclick) {
   var newJiraTicket = document.createElement("div");
-  newJiraTicket.onclick = onclick
+  newJiraTicket.onclick = function() {
+    onclick();
+    newJiraTicket.style.display = "none";
+  }
   newJiraTicket.style =
     "float: left; display:inline-block; margin: 10px; width: 200px; overflow:hidden; border: 1px solid black; padding: 5px;";
 
@@ -121,23 +124,19 @@ function getRowInfo(rowId) {
 }
 
 function setRowData(rowId, data) {
-  var tableElements = document.getElementById("timesheettable").children;
-  var row = tableElements[rowId];
   for (var i = 0; i < 7; i++) {
-    const box = row.children[0].children[7 + i].children[2].children[0];
     if (data[i]) {
-      box.value = Math.round(data[i] * 100) / 100;
-      Data_ChangedW(box);
+      setCellData(rowId, i, data[i])
     }
   }
 }
 
-function setCellData(rowId, cellColumn, data) {
+function setCellData(rowId, dayOfWeekNum, data) {
   var tableElements = document.getElementById("timesheettable").children;
   var row = tableElements[rowId];
-  const box = row.children[0].children[7 + cellColumn].children[2].children[0];
-  if (data[i]) {
-    box.value = Math.round(data[i] * 100) / 100;
+  const box = row.children[0].children[7 + dayOfWeekNum].children[2].children[0];
+  if (data !== undefined && data !== null) {
+    box.value = Math.round(data * 100) / 100;
     Data_ChangedW(box);
   }
 }
@@ -295,7 +294,7 @@ function setAllData(data) {
         if (data[j].get(code)) {
           timeData[j] = data[j].get(code).reduce((a,b) => a + b.hours, 0);
           data[j].get(code).map(function(e) {
-            addCardFromData(i, e.jira.id, e.jira.summary, e.hours + "hrs", e.startTime+"-"+e.endTime, "statusTBD", i, "?")
+            addCardFromData(i, e.jira.id, e.jira.summary, e.hours + "hrs", e.startTime+"-"+e.endTime, "statusTBD", i, j)
           })
           
         }
@@ -305,7 +304,7 @@ function setAllData(data) {
   }
 }
 
-function addCardFromData(rowId, jiraId, jiraSummary, timeElapsed, duration, status, rowId, columnId) {
+function addCardFromData(rowId, jiraId, jiraSummary, timeElapsed, duration, status, rowId, dayOfWeekNum) {
   addCardsToRow(
     rowId,
     getCardDiv(
@@ -314,7 +313,9 @@ function addCardFromData(rowId, jiraId, jiraSummary, timeElapsed, duration, stat
       timeElapsed,
       duration,
       status,
-      function() {alert(timeElapsed + " : " + rowId + " : " + columnId)}
+      function() {
+        setCellData(rowId, dayOfWeekNum, 0);
+    }
     )
   );
 }
