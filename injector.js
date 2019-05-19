@@ -292,12 +292,12 @@ function checkRowExistsForAllCode(codes) {
       allCodesAdded.push(row.phase + " " + row.client + " - " + row.project + "-" + row.stage);
     }
   }
-  Array.from(codes).forEach(function(e) {
-    if (allCodesAdded.includes("CAPLINTR.001 Caplin - Caplin Trader-Maintenance")) {
+  Array.from(codes).forEach(function(code) {
+    if (allCodesAdded.includes(code)) {
 
     } else {
-      console.log("This code is missing:", e)
-      alert(("The following code is missing, check console: " + e))
+      console.log("This code is missing:", code)
+      alert(("The following code is missing, check console: " + code))
     }
   })
 }
@@ -389,6 +389,7 @@ function handleResponse(response, user) {
   }
 
   setAllData(dayData);
+  window.dayData = dayData;
 
   console.log("Total issues worked on in last 10 days:", data.issues.length);
   console.log("Issues you have worked on in last 10 days:", yourData.length);
