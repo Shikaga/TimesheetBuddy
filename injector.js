@@ -135,7 +135,7 @@ function addCellData(rowId, dayOfWeekNum, hoursToAdd) {
   var tableElements = document.getElementById("timesheettable").children;
   var row = tableElements[rowId];
   const box = row.children[0].children[7 + dayOfWeekNum].children[2].children[0];
-  var currentHours = box.value || 0;
+  var currentHours = Number.parseFloat(box.value) || 0;
   if (hoursToAdd !== undefined && hoursToAdd !== null) {
     box.value = currentHours + hoursToAdd;
     Data_ChangedW(box);
