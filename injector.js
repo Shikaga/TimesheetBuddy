@@ -1,16 +1,16 @@
 var newScript = document.createElement("script");
 newScript.type = "text/javascript";
-newScript.src = window.damJSDomain + "utils/DataExtractor.js";
+newScript.src = window.damJSDomain + "/utils/DataExtractor.js";
 document.getElementsByTagName("head")[0].appendChild(newScript);
 
 newScript = document.createElement("script");
 newScript.type = "text/javascript";
-newScript.src = window.damJSDomain + "utils/DataConverter.js";
+newScript.src = window.damJSDomain + "/utils/DataConverter.js";
 document.getElementsByTagName("head")[0].appendChild(newScript);
 
 newScript = document.createElement("script");
 newScript.type = "text/javascript";
-newScript.src = window.damJSDomain + "utils/statuses.js";
+newScript.src = window.damJSDomain + "/utils/statuses.js";
 document.getElementsByTagName("head")[0].appendChild(newScript);
 
 var months = {
