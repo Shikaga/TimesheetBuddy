@@ -372,12 +372,21 @@ function handleResponse(response, user) {
   var extractedData = extrator.extractData(yourData, user);
   var days = getDays();
   var dayData = getAllData(extractedData, days);
-  uniqueCodes = dayData.reduce((a,b) => a.concat(a.concat([...b.keys()])), []).reduce(function(set, obj) {
+  var uniqueCodes = dayData.reduce((a,b) => a.concat(a.concat([...b.keys()])), []).reduce(function(set, obj) {
     set.add(obj)
     return set;
   }, new Set());
   uniqueCodes.delete(null);
   checkRowExistsForAllCode(uniqueCodes);
+
+  var jirasWithoutCodes = dayData.reduce((a,b) => a.concat(b.get(null) || []), []).reduce((a,b) => a.concat(b.jira.id),[]).reduce(function(set, obj) {
+    set.add(obj)
+    return set;
+  }, new Set());
+  if (jirasWithoutCodes.size > 0) {
+    console.log("The following Jiras have no codes", jirasWithoutCodes);
+    alert(jirasWithoutCodes.size + " Jiras don't have associated timesheet codes. Check console and discuss with your PO or PM");
+  }
 
   setAllData(dayData);
 
