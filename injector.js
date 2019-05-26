@@ -13,6 +13,52 @@ newScript.type = "text/javascript";
 newScript.src = window.damJSDomain + "/utils/statuses.js";
 document.getElementsByTagName("head")[0].appendChild(newScript);
 
+newScript = document.createElement("script");
+newScript.type = "text/javascript";
+newScript.src = window.damJSDomain + "/lib/fullcalendar/core/main.js";
+document.getElementsByTagName("head")[0].appendChild(newScript);
+
+newScript = document.createElement("link");
+newScript.rel = "stylesheet";
+newScript.href = window.damJSDomain + "/lib/fullcalendar/core/main.css";
+document.getElementsByTagName("head")[0].appendChild(newScript);
+
+newScript = document.createElement("link");
+newScript.rel = "stylesheet";
+newScript.href = window.damJSDomain + "/lib/fullcalendar/timegrid/main.css";
+document.getElementsByTagName("head")[0].appendChild(newScript);
+
+newScript = document.createElement("link");
+newScript.rel = "stylesheet";
+newScript.href = window.damJSDomain + "/lib/fullcalendar/daygrid/main.css";
+document.getElementsByTagName("head")[0].appendChild(newScript);
+
+newScript = document.createElement("link");
+newScript.rel = "stylesheet";
+newScript.href = window.damJSDomain + "/lib/fullcalendar/list/main.css";
+document.getElementsByTagName("head")[0].appendChild(newScript);
+
+setTimeout(function() {
+  newScript = document.createElement("script");
+  newScript.type = "text/javascript";
+  newScript.src = window.damJSDomain + "/lib/fullcalendar/interaction/main.js";
+  document.getElementsByTagName("head")[0].appendChild(newScript);
+},100);
+
+setTimeout(function() {
+  newScript = document.createElement("script");
+  newScript.type = "text/javascript";
+  newScript.src = window.damJSDomain + "/lib/fullcalendar/daygrid/main.js";
+  document.getElementsByTagName("head")[0].appendChild(newScript);
+},200);
+
+setTimeout(function() {
+  newScript = document.createElement("script");
+  newScript.type = "text/javascript";
+  newScript.src = window.damJSDomain + "/lib/fullcalendar/timegrid/main.js";
+  document.getElementsByTagName("head")[0].appendChild(newScript);
+},300);
+
 var months = {
   Jan: 0,
   Feb: 1,
@@ -235,12 +281,12 @@ function addLoginPanel() {
   insertBefore(headerBar, loginPanel);
 }
 
-function loadData(username, password, projectIds) {
+function loadData(loginUsername, password, jiraUsername, calendarUsername, projectIds) {
   getDataWithJSON(
     function(response) {
-      handleResponse(response, username); //change this when testing
+      handleResponse(response, jiraUsername, calendarUsername); //change this when testing
     },
-    username,
+    loginUsername,
     password,
     "https://jira.caplin.com/rest/api/latest/search?jql=updatedDate > -10d AND (" +
       projectIds
@@ -253,23 +299,26 @@ function loadData(username, password, projectIds) {
 }
 
 function getDays() {
-  var columns = document
-    .getElementById("timesheettable")
-    .children[0].children[1].querySelectorAll(".no-sort");
-  var dayColumns = [];
-  for (let i = 0; i < columns.length; i++) {
-    if (columns[i].querySelector(".date-wrapper")) {
-      dayColumns.push(columns[i].querySelector(".date-wrapper"));
-    }
-  }
+  // var columns = document
+  //   .getElementById("timesheettable")
+  //   .children[0].children[1].querySelectorAll(".no-sort");
+  // var dayColumns = [];
+  // for (let i = 0; i < columns.length; i++) {
+  //   if (columns[i].querySelector(".date-wrapper")) {
+  //     dayColumns.push(columns[i].querySelector(".date-wrapper"));
+  //   }
+  // }
 
   var days = [];
-  for (let j = 0; j < dayColumns.length; j++) {
-    var year = parseInt(dayColumns[j].children[0].innerText) + 2000;
-    var month = months[dayColumns[j].children[1].innerText];
-    var date = parseInt(dayColumns[j].children[2].innerText);
-    days.push(new Date(year, month, date));
+  for (var i=0; i < 7; i++) {
+    days.push(new Date(2019, 04, 19+i))
   }
+  // for (let j = 0; j < dayColumns.length; j++) {
+  //   var year = parseInt(dayColumns[j].children[0].innerText) + 2000;
+  //   var month = months[dayColumns[j].children[1].innerText];
+  //   var date = parseInt(dayColumns[j].children[2].innerText);
+  //   days.push(new Date(year, month, date));
+  // }
   return days;
 }
 
@@ -339,7 +388,7 @@ function addCardFromData(rowId, jiraId, jiraSummary, timeElapsed, duration, stat
   );
 }
 
-function handleResponse(response, user) {
+function handleResponse(response, user, calendarUsername) {
   var extrator = new DataExtractor(new Date());
   window.sameDay = function(d1, d2) {
     return (
@@ -377,7 +426,7 @@ function handleResponse(response, user) {
     return set;
   }, new Set());
   uniqueCodes.delete(null);
-  checkRowExistsForAllCode(uniqueCodes);
+  // checkRowExistsForAllCode(uniqueCodes);
 
   var jirasWithoutCodes = dayData.reduce((a,b) => a.concat(b.get(null) || []), []).reduce((a,b) => a.concat(b.jira.id),[]).reduce(function(set, obj) {
     set.add(obj)
@@ -388,7 +437,74 @@ function handleResponse(response, user) {
     alert(jirasWithoutCodes.size + " Jiras don't have associated timesheet codes. Check console and discuss with your PO or PM");
   }
 
-  setAllData(dayData);
+  var request = new XMLHttpRequest();
+  request.open('GET', 'http://localhost:3000?user=' + calendarUsername + '&startTime=2019-05-18T00:00:00.898Z&endTime=2019-05-25T00:00:00.898Z', true)
+  request.onload = function (response) {
+    var events = JSON.parse(response.target.response)
+    var fullcalendarEvents = events.map((event) => {
+      return {
+        title: event.summary,
+        start: event.startTime,
+        end: event.endTime,
+        backgroundColor: "blue"
+      }
+    })
+    dayData.forEach((day, dayId) => {
+      day.forEach((code) => {
+        code.forEach((issue) => {
+          console.log(day, code, dayId)
+          var days = getDays();
+          var minDate = new Date(days[dayId].getTime() + 9*1000*60*60);
+          var startTime = new Date(Math.max(minDate, issue.startTime))
+          var maxDate = new Date(days[dayId].getTime() + 17.5*1000*60*60);
+          var endTime = new Date(Math.min(maxDate, issue.endTime))
+          fullcalendarEvents.push({
+            title: issue.jira.id + ": " + issue.jira.summary,
+            start: startTime.toISOString(),
+            end: endTime.toISOString(),
+            backgroundColor: "green"
+          });
+        })
+      })
+    })
+    var calendarDiv = document.createElement("div");
+    calendarDiv.id = 'calendar';
+    calendarDiv.style = "z-index: 300; background-color: white; position: absolute"
+    document.body.appendChild(calendarDiv);
+
+    var calendarEl = document.getElementById('calendar');
+
+    var calendar = new FullCalendar.Calendar(calendarEl, {
+      plugins: [ 'interaction', 'dayGrid', 'timeGrid', 'list' ],
+      header: {
+        left: 'prev,next today',
+        // left: '',
+        center: 'title',
+        // right: 'timeGridWeek'
+        right: ''
+      },
+      eventClick: (info) => {
+        debugger;
+        info.el.style.backgroundColor = info.el.style.backgroundColor == info.event.backgroundColor ? "red" : info.event.backgroundColor
+      },
+      defaultView: 'timeGridWeek',
+      defaultDate: '2019-05-19',
+      editable: true,
+      navLinks: true, // can click day/week names to navigate views
+      eventLimit: true, // allow "more" link when too many events
+      eventRender: function(info) {
+        info.el.title = info.event.title;
+      },
+      events: fullcalendarEvents
+    });
+    window.x = calendar;
+
+    calendar.render();
+  }
+
+  request.send()
+
+  // setAllData(dayData);
   window.dayData = dayData;
 
   console.log("Total issues worked on in last 10 days:", data.issues.length);
@@ -441,6 +557,9 @@ setAuthorizationHeader = function(xhr, username, password) {
   xhr.setRequestHeader("Authorization", authHeader);
 };
 
-addClickEventsToDate();
+
+loadData(username, password, "jacobm", "jacob.middleton@caplin.com", "FXM,MFXMOTIF,FXST,PCTLIBRARY,CT5UP,PTGUI".split(","));
+
+// addClickEventsToDate();
 // setRowData(3, [null, 2, null, 4, null, null, null]);
-addLoginPanel();
+// addLoginPanel();
