@@ -17,15 +17,5 @@
       >
       url onto your bookmarks bar!
     </div>
-    <script type="text/javascript">
-
-      var request = new XMLHttpRequest();
-
-      request.open('GET', 'http://localhost:3000?user=jonathan.paul@caplin.com&startTime=2019-05-18T00:00:00.898Z&endTime=2019-05-25T00:00:00.898Z', true)
-      request.onload = function (response) {
-        console.log(JSON.parse(response.target.response));
-      }
-      request.send()
-    </script>
   </body>
 </html>
