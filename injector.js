@@ -316,7 +316,6 @@ function loadData(loginUsername, password, jiraUsername, calendarUsername, proje
 }
 
 function getDays() {
-  debugger;
   var columns = document
     .getElementById("timesheettable")
     .children[0].children[1].querySelectorAll(".no-sort");
@@ -384,7 +383,6 @@ function setAllData2(weekData) {
       var timeData = [0,0,0,0,0,0,0];
       weekData.forEach((codeMap, day) => {
         if (codeMap.get(code)) {
-          debugger;
           timeData[day.getDay()-1] = codeMap.get(code)
         }
       })
@@ -449,6 +447,117 @@ function addCardFromData(rowId, jiraId, jiraSummary, timeElapsed, duration, stat
   );
 }
 
+function createCalendar(dayData, fullcalendarEvents) {
+  dayData.forEach((day, dayId) => {
+    day.forEach((issues, codeId) => {
+      issues.forEach((issue) => {
+        var today = getDays()[dayId];
+        var minDate = new Date(today.getTime() + 9*1000*60*60);
+        var startTime = roundTimeQuarterHour(new Date(Math.max(minDate, issue.startTime)))
+        var maxDate = new Date(today.getTime() + 17.5*1000*60*60);
+        var endTime = roundTimeQuarterHour(new Date(Math.min(maxDate, issue.endTime)))
+        fullcalendarEvents.push({
+          title: issue.jira.id + ": " + issue.jira.summary,
+          start: startTime.toISOString(),
+          day: startTime.toISOString().substr(0,10),
+          end: endTime.toISOString(),
+          hasCode: !!codeId,
+          code: codeId,
+          ignore: false,
+          backgroundColor: !!codeId ? "green" : "lightgreen",
+          defaultColor: !!codeId ? "green" : "lightgreen",
+          type: "jira"
+        });
+      })
+    })
+  })
+  
+  var calendarDiv = document.createElement("div");
+  calendarDiv.id = 'calendar';
+  calendarDiv.style = "z-index: 300; background-color: white; position: absolute; height: 100%;"
+  document.getElementById('maindetail').appendChild(calendarDiv);
+
+  var calendarEl = document.getElementById('calendar');
+
+  var calendar = new FullCalendar.Calendar(calendarEl, {
+    plugins: [ 'interaction', 'dayGrid', 'timeGrid', 'list' ],
+    customButtons: {
+      exportButton: {
+        text: 'Export!',
+        click: function() {
+          var daysMap = getDaysMap(Map);
+          daysMap.forEach((map, date) => {
+            var events = calendar.getEvents().filter((event) => 
+                          event.extendedProps.hasCode && 
+                          !event.extendedProps.ignored &&
+                          new Date(date.getTime() + 2 * 3600000).toISOString().substr(0,10) == event.start.toISOString().substr(0,10)); //lol this hack is hilarous
+            events.forEach((event) => {
+              map.set(event.extendedProps.code, map.get(event.extendedProps.code) || 0);
+              map.set(event.extendedProps.code, map.get(event.extendedProps.code) + hoursBetweenTwoDates(event.start, event.end))
+            })
+          })
+          setAllData2(daysMap);
+        }.bind(this)
+      }
+    },
+    header: {
+      left: '',
+      // left: '',
+      center: 'title',
+      // right: 'timeGridWeek'
+      right: 'exportButton'
+    },
+    defaultView: 'timeGridWeek',
+    defaultDate: new Date(getDays()[0].getTime()+ 7200000).toISOString().substr(0,10),
+    snapDuration: '00:15',
+    slotDuration: '00:15',
+    editable: true,
+    firstDay: 1,
+    navLinks: true, // can click day/week names to navigate views
+    eventLimit: true, // allow "more" link when too many events
+    eventRender: function(info) {
+      info.el.title = info.event.title;
+    },
+    eventClick: function(info) {
+      if (info.event.backgroundColor == info.event.extendedProps.defaultColor) {
+        info.event.setProp("backgroundColor", "red");
+        info.event.setExtendedProp("ignore", true);
+      } else {
+        info.event.setProp("backgroundColor", info.event.extendedProps.defaultColor);
+        info.event.setExtendedProp("ignore", false);
+      }
+      setTimeout(function() {
+        setDaySummary(this);
+      }.bind(this),0);
+    },
+    eventResizeStop: function() {
+      setTimeout(function() {
+        setDaySummary(this);
+      }.bind(this),0);
+    },
+    eventDragStop: function() {
+      setTimeout(function() {
+        setDaySummary(this);
+      }.bind(this),0);
+    },
+    events: fullcalendarEvents
+  });
+  window.calendar = calendar;
+
+  calendar.render();
+  alert('Scroll to bottom');
+
+  getDays().forEach((day) => {
+    calendar.addEvent({
+      title: "0 hrs",
+      start: day.toISOString().substr(0,10),
+      day: day.toISOString().substr(0,10),
+      type: "summary"
+    })
+  })
+  setDaySummary(calendar)
+}
+
 function handleResponse(response, user, calendarUsername) {
   var extrator = new DataExtractor(new Date());
   window.sameDay = function(d1, d2) {
@@ -500,138 +609,33 @@ function handleResponse(response, user, calendarUsername) {
 
   var request = new XMLHttpRequest();
   var days = getDays();
-  request.open('GET', 'http://localhost:3000?user=' + calendarUsername + '&startTime=' + new Date(getDays()[0].getTime()+ 7200000).toISOString().substr(0,10) + 'T00:00:00.000Z&endTime=' + new Date(getDays()[6].getTime()+ 7200000).toISOString().substr(0,10) + 'T23:00:00.898Z', true)
-  request.onload = function (response) {
-    var events = JSON.parse(response.target.response)
-    var fullcalendarEvents = events.map((event) => {
-      var code = event.timesheetCode == "No Code" ? null : event.timesheetCode;
-      return {
-        title: event.summary,
-        start: event.startTime,
-        day: event.startTime.substr(0,10),
-        end: event.endTime,
-        backgroundColor: !!code ? "blue" : "lightblue",
-        defaultColor: !!code ? "blue" : "lightblue",
-        hasCode: !!code,
-        code: code,
-        ignore: false,
-        type: "calendar"
-      }
-    })
-    dayData.forEach((day, dayId) => {
-      day.forEach((issues, codeId) => {
-        issues.forEach((issue) => {
-          var today = getDays()[dayId];
-          var minDate = new Date(today.getTime() + 9*1000*60*60);
-          var startTime = roundTimeQuarterHour(new Date(Math.max(minDate, issue.startTime)))
-          var maxDate = new Date(today.getTime() + 17.5*1000*60*60);
-          var endTime = roundTimeQuarterHour(new Date(Math.min(maxDate, issue.endTime)))
-          fullcalendarEvents.push({
-            title: issue.jira.id + ": " + issue.jira.summary,
-            start: startTime.toISOString(),
-            day: startTime.toISOString().substr(0,10),
-            end: endTime.toISOString(),
-            hasCode: !!codeId,
-            code: codeId,
-            ignore: false,
-            backgroundColor: !!codeId ? "green" : "lightgreen",
-            defaultColor: !!codeId ? "green" : "lightgreen",
-            type: "jira"
-          });
-        })
-      })
-    })
+  // request.open('GET', 'http://localhost:3000?user=' + calendarUsername + '&startTime=' + new Date(getDays()[0].getTime()+ 7200000).toISOString().substr(0,10) + 'T00:00:00.000Z&endTime=' + new Date(getDays()[6].getTime()+ 7200000).toISOString().substr(0,10) + 'T23:00:00.898Z', true)
+  // request.onload = function (response) {
+  //   var events = JSON.parse(response.target.response)
+  //   var fullcalendarEvents = events.map((event) => {
+  //     var code = event.timesheetCode == "No Code" ? null : event.timesheetCode;
+  //     return {
+  //       title: event.summary,
+  //       start: event.startTime,
+  //       day: event.startTime.substr(0,10),
+  //       end: event.endTime,
+  //       backgroundColor: !!code ? "blue" : "lightblue",
+  //       defaultColor: !!code ? "blue" : "lightblue",
+  //       hasCode: !!code,
+  //       code: code,
+  //       ignore: false,
+  //       type: "calendar"
+  //     }
+  //   })
+  //   //createCalendar();
     
-    var calendarDiv = document.createElement("div");
-    calendarDiv.id = 'calendar';
-    calendarDiv.style = "z-index: 300; background-color: white; position: absolute; height: 100%;"
-    document.getElementById('maindetail').appendChild(calendarDiv);
+  // }
 
-    var calendarEl = document.getElementById('calendar');
-
-    var calendar = new FullCalendar.Calendar(calendarEl, {
-      plugins: [ 'interaction', 'dayGrid', 'timeGrid', 'list' ],
-      customButtons: {
-        exportButton: {
-          text: 'Export!',
-          click: function() {
-            var daysMap = getDaysMap(Map);
-            daysMap.forEach((map, date) => {
-              var events = calendar.getEvents().filter((event) => 
-                            event.extendedProps.hasCode && 
-                            !event.extendedProps.ignored &&
-                            new Date(date.getTime() + 2 * 3600000).toISOString().substr(0,10) == event.start.toISOString().substr(0,10)); //lol this hack is hilarous
-              events.forEach((event) => {
-                map.set(event.extendedProps.code, map.get(event.extendedProps.code) || 0);
-                map.set(event.extendedProps.code, map.get(event.extendedProps.code) + hoursBetweenTwoDates(event.start, event.end))
-              })
-            })
-            setAllData2(daysMap);
-          }.bind(this)
-        }
-      },
-      header: {
-        left: '',
-        // left: '',
-        center: 'title',
-        // right: 'timeGridWeek'
-        right: 'exportButton'
-      },
-      defaultView: 'timeGridWeek',
-      defaultDate: new Date(getDays()[0].getTime()+ 7200000).toISOString().substr(0,10),
-      snapDuration: '00:15',
-      slotDuration: '00:15',
-      editable: true,
-      firstDay: 1,
-      navLinks: true, // can click day/week names to navigate views
-      eventLimit: true, // allow "more" link when too many events
-      eventRender: function(info) {
-        info.el.title = info.event.title;
-      },
-      eventClick: function(info) {
-        if (info.event.backgroundColor == info.event.extendedProps.defaultColor) {
-          info.event.setProp("backgroundColor", "red");
-          info.event.setExtendedProp("ignore", true);
-        } else {
-          info.event.setProp("backgroundColor", info.event.extendedProps.defaultColor);
-          info.event.setExtendedProp("ignore", false);
-        }
-        setTimeout(function() {
-          setDaySummary(this);
-        }.bind(this),0);
-      },
-      eventResizeStop: function() {
-        setTimeout(function() {
-          setDaySummary(this);
-        }.bind(this),0);
-      },
-      eventDragStop: function() {
-        setTimeout(function() {
-          setDaySummary(this);
-        }.bind(this),0);
-      },
-      events: fullcalendarEvents
-    });
-    window.calendar = calendar;
-
-    calendar.render();
-    alert('Scroll to bottom');
-
-    getDays().forEach((day) => {
-      calendar.addEvent({
-        title: "0 hrs",
-        start: day.toISOString().substr(0,10),
-        day: day.toISOString().substr(0,10),
-        type: "summary"
-      })
-    })
-    setDaySummary(calendar)
-    
-  }
-
-  request.send()
+  // request.send()
 
   // setAllData(dayData);
+
+  createCalendar(dayData, []);
 
   console.log("Total issues worked on in last 10 days:", data.issues.length);
   console.log("Issues you have worked on in last 10 days:", yourData.length);
