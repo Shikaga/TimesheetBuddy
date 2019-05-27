@@ -82,6 +82,15 @@ function insertBefore(referenceNode, newNode) {
   referenceNode.insertBefore(newNode, referenceNode.firstChild);
 }
 
+function roundTimeQuarterHour(time) {
+  var timeToReturn = new Date(time);
+
+  timeToReturn.setMilliseconds(Math.round(time.getMilliseconds() / 1000) * 1000);
+  timeToReturn.setSeconds(Math.round(timeToReturn.getSeconds() / 60) * 60);
+  timeToReturn.setMinutes(Math.round(timeToReturn.getMinutes() / 15) * 15);
+  return timeToReturn;
+}
+
 var monthMap = {
   Jan: "January",
   Feb: "February",
@@ -311,7 +320,7 @@ function getDays() {
 
   var days = [];
   for (var i=0; i < 7; i++) {
-    days.push(new Date(2019, 04, 19+i))
+    days.push(new Date(2019, 04, 20+i))
   }
   // for (let j = 0; j < dayColumns.length; j++) {
   //   var year = parseInt(dayColumns[j].children[0].innerText) + 2000;
@@ -370,6 +379,20 @@ function setAllData(data) {
       setRowData(i, timeData);
     }
   }
+}
+
+function setDaySummary(calendar) {
+  var summaries = calendar.getEvents().filter((event) => {
+    return (event.extendedProps.type == "summary")
+  })
+  var jirasCalendars = calendar.getEvents().filter((event) => {
+    return (event.extendedProps.type == "jira" || event.extendedProps.type == "calendar")
+  })
+  summaries.forEach((summary) => {
+    var events = jirasCalendars.filter((event) => 
+      event.extendedProps.day == summary.extendedProps.day && event.extendedProps.hasCode && !event.extendedProps.ignore)
+      summary.setProp("title", events.map((event) => event.end ? (event.end - event.start) / 3600000 : 1.0).reduce((a,b) => a+b, 0) + " hrs")
+  })
 }
 
 function addCardFromData(rowId, jiraId, jiraSummary, timeElapsed, duration, status, rowId, dayOfWeekNum) {
@@ -442,31 +465,46 @@ function handleResponse(response, user, calendarUsername) {
   request.onload = function (response) {
     var events = JSON.parse(response.target.response)
     var fullcalendarEvents = events.map((event) => {
+      console.log(event.endTime, event.summary)
+      var code = event.timesheetCode == "No Code" ? null : event.timesheetCode;
       return {
         title: event.summary,
         start: event.startTime,
+        day: event.startTime.substr(0,10),
         end: event.endTime,
-        backgroundColor: "blue"
+        backgroundColor: !!code ? "blue" : "lightblue",
+        defaultColor: !!code ? "blue" : "lightblue",
+        hasCode: !!code,
+        code: code,
+        ignore: false,
+        type: "calendar"
       }
     })
     dayData.forEach((day, dayId) => {
       day.forEach((code) => {
         code.forEach((issue) => {
           console.log(day, code, dayId)
-          var days = getDays();
-          var minDate = new Date(days[dayId].getTime() + 9*1000*60*60);
-          var startTime = new Date(Math.max(minDate, issue.startTime))
-          var maxDate = new Date(days[dayId].getTime() + 17.5*1000*60*60);
-          var endTime = new Date(Math.min(maxDate, issue.endTime))
+          var today = getDays()[dayId];
+          var minDate = new Date(today.getTime() + 9*1000*60*60);
+          var startTime = roundTimeQuarterHour(new Date(Math.max(minDate, issue.startTime)))
+          var maxDate = new Date(today.getTime() + 17.5*1000*60*60);
+          var endTime = roundTimeQuarterHour(new Date(Math.min(maxDate, issue.endTime)))
           fullcalendarEvents.push({
             title: issue.jira.id + ": " + issue.jira.summary,
             start: startTime.toISOString(),
+            day: startTime.toISOString().substr(0,10),
             end: endTime.toISOString(),
-            backgroundColor: "green"
+            hasCode: !!code,
+            code: code,
+            ignore: false,
+            backgroundColor: !!code ? "green" : "lightgreen",
+            defaultColor: !!code ? "green" : "lightgreen",
+            type: "jira"
           });
         })
       })
     })
+    
     var calendarDiv = document.createElement("div");
     calendarDiv.id = 'calendar';
     calendarDiv.style = "z-index: 300; background-color: white; position: absolute"
@@ -483,23 +521,54 @@ function handleResponse(response, user, calendarUsername) {
         // right: 'timeGridWeek'
         right: ''
       },
-      eventClick: (info) => {
-        debugger;
-        info.el.style.backgroundColor = info.el.style.backgroundColor == info.event.backgroundColor ? "red" : info.event.backgroundColor
-      },
       defaultView: 'timeGridWeek',
       defaultDate: '2019-05-19',
+      snapDuration: '00:15',
+      slotDuration: '00:15',
       editable: true,
       navLinks: true, // can click day/week names to navigate views
       eventLimit: true, // allow "more" link when too many events
       eventRender: function(info) {
         info.el.title = info.event.title;
       },
+      eventClick: function(info) {
+        if (info.event.backgroundColor == info.event.extendedProps.defaultColor) {
+          info.event.setProp("backgroundColor", "red");
+          info.event.setExtendedProp("ignore", true);
+        } else {
+          info.event.setProp("backgroundColor", info.event.extendedProps.defaultColor);
+          info.event.setExtendedProp("ignore", false);
+        }
+        setTimeout(function() {
+          setDaySummary(this);
+        }.bind(this),0);
+      },
+      eventResizeStop: function() {
+        setTimeout(function() {
+          setDaySummary(this);
+        }.bind(this),0);
+      },
+      eventDragStop: function() {
+        setTimeout(function() {
+          setDaySummary(this);
+        }.bind(this),0);
+      },
       events: fullcalendarEvents
     });
     window.x = calendar;
 
     calendar.render();
+
+    getDays().forEach((day) => {
+      calendar.addEvent({
+        title: "0 hrs",
+        start: day.toISOString().substr(0,10),
+        day: day.toISOString().substr(0,10),
+        type: "summary"
+      })
+    })
+    setDaySummary(calendar)
+    
   }
 
   request.send()
@@ -556,9 +625,6 @@ setAuthorizationHeader = function(xhr, username, password) {
   var authHeader = "Basic " + btoa(username + ":" + password);
   xhr.setRequestHeader("Authorization", authHeader);
 };
-
-
-loadData(username, password, "jacobm", "jacob.middleton@caplin.com", "FXM,MFXMOTIF,FXST,PCTLIBRARY,CT5UP,PTGUI".split(","));
 
 // addClickEventsToDate();
 // setRowData(3, [null, 2, null, 4, null, null, null]);
