@@ -316,26 +316,24 @@ function loadData(loginUsername, password, jiraUsername, calendarUsername, proje
 }
 
 function getDays() {
-  // var columns = document
-  //   .getElementById("timesheettable")
-  //   .children[0].children[1].querySelectorAll(".no-sort");
-  // var dayColumns = [];
-  // for (let i = 0; i < columns.length; i++) {
-  //   if (columns[i].querySelector(".date-wrapper")) {
-  //     dayColumns.push(columns[i].querySelector(".date-wrapper"));
-  //   }
-  // }
+  debugger;
+  var columns = document
+    .getElementById("timesheettable")
+    .children[0].children[1].querySelectorAll(".no-sort");
+  var dayColumns = [];
+  for (let i = 0; i < columns.length; i++) {
+    if (columns[i].querySelector(".date-wrapper")) {
+      dayColumns.push(columns[i].querySelector(".date-wrapper"));
+    }
+  }
 
   var days = [];
-  for (var i=0; i < 7; i++) {
-    days.push(new Date(2019, 04, 20+i))
+  for (let j = 0; j < dayColumns.length; j++) {
+    var year = parseInt(dayColumns[j].children[0].innerText) + 2000;
+    var month = months[dayColumns[j].children[1].innerText];
+    var date = parseInt(dayColumns[j].children[2].innerText);
+    days.push(new Date(year, month, date));
   }
-  // for (let j = 0; j < dayColumns.length; j++) {
-  //   var year = parseInt(dayColumns[j].children[0].innerText) + 2000;
-  //   var month = months[dayColumns[j].children[1].innerText];
-  //   var date = parseInt(dayColumns[j].children[2].innerText);
-  //   days.push(new Date(year, month, date));
-  // }
   return days;
 }
 
@@ -501,7 +499,8 @@ function handleResponse(response, user, calendarUsername) {
   }
 
   var request = new XMLHttpRequest();
-  request.open('GET', 'http://localhost:3000?user=' + calendarUsername + '&startTime=2019-05-18T00:00:00.898Z&endTime=2019-05-25T00:00:00.898Z', true)
+  var days = getDays();
+  request.open('GET', 'http://localhost:3000?user=' + calendarUsername + '&startTime=' + new Date(getDays()[0].getTime()+ 7200000).toISOString().substr(0,10) + 'T00:00:00.000Z&endTime=' + new Date(getDays()[6].getTime()+ 7200000).toISOString().substr(0,10) + 'T23:00:00.898Z', true)
   request.onload = function (response) {
     var events = JSON.parse(response.target.response)
     var fullcalendarEvents = events.map((event) => {
@@ -562,7 +561,6 @@ function handleResponse(response, user, calendarUsername) {
                             event.extendedProps.hasCode && 
                             !event.extendedProps.ignored &&
                             new Date(date.getTime() + 2 * 3600000).toISOString().substr(0,10) == event.start.toISOString().substr(0,10)); //lol this hack is hilarous
-              debugger;
               events.forEach((event) => {
                 map.set(event.extendedProps.code, map.get(event.extendedProps.code) || 0);
                 map.set(event.extendedProps.code, map.get(event.extendedProps.code) + hoursBetweenTwoDates(event.start, event.end))
@@ -580,7 +578,7 @@ function handleResponse(response, user, calendarUsername) {
         right: 'exportButton'
       },
       defaultView: 'timeGridWeek',
-      defaultDate: '2019-05-20',
+      defaultDate: new Date(getDays()[0].getTime()+ 7200000).toISOString().substr(0,10),
       snapDuration: '00:15',
       slotDuration: '00:15',
       editable: true,
@@ -646,20 +644,6 @@ function handleResponse(response, user, calendarUsername) {
     "Thursday",
     "Friday",
     "Saturday"
-  ];
-  window.months = [
-    "January",
-    "February",
-    "March",
-    "April",
-    "May",
-    "June",
-    "July",
-    "August",
-    "September",
-    "October",
-    "November",
-    "December"
   ];
 }
 
