@@ -259,6 +259,11 @@ function addLoginPanel() {
   rememberPassword.type = "checkbox";
   rememberPassword.checked = !!localStorage.getItem("password");
 
+  var emailLabel = document.createElement("span");
+  emailLabel.innerHTML = "Email";
+  var email = document.createElement("input");
+  email.value = localStorage.getItem("email");
+
   var projectsLabel = document.createElement("span");
   projectsLabel.innerHTML = " Project";
   var projects = document.createElement("input");
@@ -273,14 +278,17 @@ function addLoginPanel() {
     if (rememberPassword.checked) {
       localStorage.setItem("password", password.value);
     }
+    localStorage.setItem("email", email.value);
     localStorage.setItem("projects", projects.value);
-    loadData(username.value, password.value, projects.value.split(","));
+    loadData(username.value, password.value, username.value, email.value, projects.value.split(","));
   };
 
   loginPanel.appendChild(usernameLabel);
   loginPanel.appendChild(username);
   loginPanel.appendChild(passwordLabel);
   loginPanel.appendChild(password);
+  loginPanel.appendChild(emailLabel);
+  loginPanel.appendChild(email);
   loginPanel.appendChild(rememberPasswordLabel);
   loginPanel.appendChild(rememberPassword);
   loginPanel.appendChild(projectsLabel);
@@ -331,6 +339,13 @@ function getDays() {
   return days;
 }
 
+function getDaysMap(startingValue) {
+  return getDays().reduce(function(map, obj) {
+    map.set(obj,typeof startingValue == "function" ? new startingValue() : startingValue)
+    return map;
+  }, new Map());
+}
+
 function getAllData(data, days) {
   var converter = new DataConverter();
   var dayData = [];
@@ -360,6 +375,27 @@ function checkRowExistsForAllCode(codes) {
   })
 }
 
+
+function setAllData2(weekData) {
+  var rowNum = document.getElementById("timesheettable").children.length;
+  for (let i = 0; i < rowNum; i++) {
+    var row = getRowInfo(i);
+    if (row) {
+      var code =
+        row.phase + " " + row.client + " - " + row.project + "-" + row.stage;
+      var timeData = [0,0,0,0,0,0,0];
+      weekData.forEach((codeMap, day) => {
+        if (codeMap.get(code)) {
+          debugger;
+          timeData[day.getDay()-1] = codeMap.get(code)
+        }
+      })
+      console.log(timeData);
+      setRowData(i, timeData);
+    }
+  }
+}
+
 function setAllData(data) {
   var rowNum = document.getElementById("timesheettable").children.length;
   for (let i = 0; i < rowNum; i++) {
@@ -381,6 +417,10 @@ function setAllData(data) {
   }
 }
 
+function hoursBetweenTwoDates(firstDate, secondDate) {
+  return firstDate ? (secondDate - firstDate) / 3600000 : 1.0
+}
+
 function setDaySummary(calendar) {
   var summaries = calendar.getEvents().filter((event) => {
     return (event.extendedProps.type == "summary")
@@ -391,7 +431,7 @@ function setDaySummary(calendar) {
   summaries.forEach((summary) => {
     var events = jirasCalendars.filter((event) => 
       event.extendedProps.day == summary.extendedProps.day && event.extendedProps.hasCode && !event.extendedProps.ignore)
-      summary.setProp("title", events.map((event) => event.end ? (event.end - event.start) / 3600000 : 1.0).reduce((a,b) => a+b, 0) + " hrs")
+      summary.setProp("title", events.map((event) => hoursBetweenTwoDates(event.start, event.end)).reduce((a,b) => a+b, 0) + " hrs")
   })
 }
 
@@ -465,7 +505,6 @@ function handleResponse(response, user, calendarUsername) {
   request.onload = function (response) {
     var events = JSON.parse(response.target.response)
     var fullcalendarEvents = events.map((event) => {
-      console.log(event.endTime, event.summary)
       var code = event.timesheetCode == "No Code" ? null : event.timesheetCode;
       return {
         title: event.summary,
@@ -481,9 +520,8 @@ function handleResponse(response, user, calendarUsername) {
       }
     })
     dayData.forEach((day, dayId) => {
-      day.forEach((code) => {
-        code.forEach((issue) => {
-          console.log(day, code, dayId)
+      day.forEach((issues, codeId) => {
+        issues.forEach((issue) => {
           var today = getDays()[dayId];
           var minDate = new Date(today.getTime() + 9*1000*60*60);
           var startTime = roundTimeQuarterHour(new Date(Math.max(minDate, issue.startTime)))
@@ -494,11 +532,11 @@ function handleResponse(response, user, calendarUsername) {
             start: startTime.toISOString(),
             day: startTime.toISOString().substr(0,10),
             end: endTime.toISOString(),
-            hasCode: !!code,
-            code: code,
+            hasCode: !!codeId,
+            code: codeId,
             ignore: false,
-            backgroundColor: !!code ? "green" : "lightgreen",
-            defaultColor: !!code ? "green" : "lightgreen",
+            backgroundColor: !!codeId ? "green" : "lightgreen",
+            defaultColor: !!codeId ? "green" : "lightgreen",
             type: "jira"
           });
         })
@@ -507,25 +545,46 @@ function handleResponse(response, user, calendarUsername) {
     
     var calendarDiv = document.createElement("div");
     calendarDiv.id = 'calendar';
-    calendarDiv.style = "z-index: 300; background-color: white; position: absolute"
-    document.body.appendChild(calendarDiv);
+    calendarDiv.style = "z-index: 300; background-color: white; position: absolute; height: 100%;"
+    document.getElementById('maindetail').appendChild(calendarDiv);
 
     var calendarEl = document.getElementById('calendar');
 
     var calendar = new FullCalendar.Calendar(calendarEl, {
       plugins: [ 'interaction', 'dayGrid', 'timeGrid', 'list' ],
+      customButtons: {
+        exportButton: {
+          text: 'Export!',
+          click: function() {
+            var daysMap = getDaysMap(Map);
+            daysMap.forEach((map, date) => {
+              var events = calendar.getEvents().filter((event) => 
+                            event.extendedProps.hasCode && 
+                            !event.extendedProps.ignored &&
+                            new Date(date.getTime() + 2 * 3600000).toISOString().substr(0,10) == event.start.toISOString().substr(0,10)); //lol this hack is hilarous
+              debugger;
+              events.forEach((event) => {
+                map.set(event.extendedProps.code, map.get(event.extendedProps.code) || 0);
+                map.set(event.extendedProps.code, map.get(event.extendedProps.code) + hoursBetweenTwoDates(event.start, event.end))
+              })
+            })
+            setAllData2(daysMap);
+          }.bind(this)
+        }
+      },
       header: {
-        left: 'prev,next today',
+        left: '',
         // left: '',
         center: 'title',
         // right: 'timeGridWeek'
-        right: ''
+        right: 'exportButton'
       },
       defaultView: 'timeGridWeek',
-      defaultDate: '2019-05-19',
+      defaultDate: '2019-05-20',
       snapDuration: '00:15',
       slotDuration: '00:15',
       editable: true,
+      firstDay: 1,
       navLinks: true, // can click day/week names to navigate views
       eventLimit: true, // allow "more" link when too many events
       eventRender: function(info) {
@@ -555,9 +614,10 @@ function handleResponse(response, user, calendarUsername) {
       },
       events: fullcalendarEvents
     });
-    window.x = calendar;
+    window.calendar = calendar;
 
     calendar.render();
+    alert('Scroll to bottom');
 
     getDays().forEach((day) => {
       calendar.addEvent({
@@ -574,7 +634,6 @@ function handleResponse(response, user, calendarUsername) {
   request.send()
 
   // setAllData(dayData);
-  window.dayData = dayData;
 
   console.log("Total issues worked on in last 10 days:", data.issues.length);
   console.log("Issues you have worked on in last 10 days:", yourData.length);
@@ -627,5 +686,4 @@ setAuthorizationHeader = function(xhr, username, password) {
 };
 
 // addClickEventsToDate();
-// setRowData(3, [null, 2, null, 4, null, null, null]);
-// addLoginPanel();
+addLoginPanel();
