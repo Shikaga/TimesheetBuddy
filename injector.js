@@ -489,7 +489,7 @@ function createCalendar(dayData, fullcalendarEvents) {
           daysMap.forEach((map, date) => {
             var events = calendar.getEvents().filter((event) => 
                           event.extendedProps.hasCode && 
-                          !event.extendedProps.ignored &&
+                          !event.extendedProps.ignore &&
                           new Date(date.getTime() + 2 * 3600000).toISOString().substr(0,10) == event.start.toISOString().substr(0,10)); //lol this hack is hilarous
             events.forEach((event) => {
               map.set(event.extendedProps.code, map.get(event.extendedProps.code) || 0);
