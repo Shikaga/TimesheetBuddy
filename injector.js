@@ -252,6 +252,10 @@ function addLoginPanel() {
     localStorage.getItem("projects") ||
     "FXM,MFXMOTIF,FXST,PCTLIBRARY,CT5UP,PTGUI";
 
+  var loadingLabel = document.createElement("span");
+  loadingLabel.innerHTML = "";
+  loadingLabel.id = "loading";
+
   var calendarDiv = document.createElement("div");
   calendarDiv.id = 'calendar';
   calendarDiv.style = "z-index: 300; background-color: white; position: absolute; height: 100%;"
@@ -265,6 +269,7 @@ function addLoginPanel() {
     }
     localStorage.setItem("email", email.value);
     localStorage.setItem("projects", projects.value);
+    loadingLabel.innerHTML = "Loading...";
     loadData(username.value, password.value, username.value, email.value, projects.value.split(","));
   };
 
@@ -279,6 +284,7 @@ function addLoginPanel() {
   loginPanel.appendChild(projectsLabel);
   loginPanel.appendChild(projects);
   loginPanel.appendChild(loginButton);
+  loginPanel.appendChild(loadingLabel);
   loginPanel.appendChild(calendarDiv);
 
   insertBefore(headerBar, loginPanel);
@@ -641,10 +647,12 @@ getDataWithJSON = function(callback, username, password, requestUrl) {
   xhr.setRequestHeader("x-requested-with", "love");
   xhr.send();
   xhr.onload = function(response) {
-    if (this.status === 401) {
-      callback(this.status);
-    } else {
+    if (this.status === 200) {
+      document.getElementById('loading').innerHTML = "";
       callback(response);
+    } else {
+      alert("Response: " + this.status + ". Something went wrong. Refresh and try again?")
+      callback(this.status);
     }
   };
 };
