@@ -577,7 +577,7 @@ function handleResponse(response, user, calendarUsername) {
     return set;
   }, new Set());
   uniqueCodes.delete(null);
-  // checkRowExistsForAllCode(uniqueCodes);
+  checkRowExistsForAllCode(uniqueCodes);
 
   var jirasWithoutCodes = dayData.reduce((a,b) => a.concat(b.get(null) || []), []).reduce((a,b) => a.concat(b.jira.id),[]).reduce(function(set, obj) {
     set.add(obj)
