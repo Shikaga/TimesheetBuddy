@@ -38,27 +38,6 @@ newScript.rel = "stylesheet";
 newScript.href = window.damJSDomain + "/lib/fullcalendar/list/main.css";
 document.getElementsByTagName("head")[0].appendChild(newScript);
 
-setTimeout(function() {
-  newScript = document.createElement("script");
-  newScript.type = "text/javascript";
-  newScript.src = window.damJSDomain + "/lib/fullcalendar/interaction/main.js";
-  document.getElementsByTagName("head")[0].appendChild(newScript);
-},100);
-
-setTimeout(function() {
-  newScript = document.createElement("script");
-  newScript.type = "text/javascript";
-  newScript.src = window.damJSDomain + "/lib/fullcalendar/daygrid/main.js";
-  document.getElementsByTagName("head")[0].appendChild(newScript);
-},200);
-
-setTimeout(function() {
-  newScript = document.createElement("script");
-  newScript.type = "text/javascript";
-  newScript.src = window.damJSDomain + "/lib/fullcalendar/timegrid/main.js";
-  document.getElementsByTagName("head")[0].appendChild(newScript);
-},300);
-
 var months = {
   Jan: 0,
   Feb: 1,
@@ -241,6 +220,8 @@ function getRowIdFromTimesheet(timesheetString) {
 function addLoginPanel() {
   var headerBar = document.getElementById("TSWOptions");
   var loginPanel = document.createElement("div");
+  loginPanel.id = "loginPanel"
+  loginPanel.style = "z-index: 300; background-color: white; position: fixed; height: 100%; top: 0; left: 0"
 
   var usernameLabel = document.createElement("span");
   usernameLabel.innerHTML = "Username";
@@ -271,6 +252,10 @@ function addLoginPanel() {
     localStorage.getItem("projects") ||
     "FXM,MFXMOTIF,FXST,PCTLIBRARY,CT5UP,PTGUI";
 
+  var calendarDiv = document.createElement("div");
+  calendarDiv.id = 'calendar';
+  calendarDiv.style = "z-index: 300; background-color: white; position: absolute; height: 100%;"
+
   var loginButton = document.createElement("button");
   loginButton.innerHTML = "Login";
   loginButton.onclick = function() {
@@ -294,6 +279,7 @@ function addLoginPanel() {
   loginPanel.appendChild(projectsLabel);
   loginPanel.appendChild(projects);
   loginPanel.appendChild(loginButton);
+  loginPanel.appendChild(calendarDiv);
 
   insertBefore(headerBar, loginPanel);
 }
@@ -471,11 +457,6 @@ function createCalendar(dayData, fullcalendarEvents) {
       })
     })
   })
-  
-  var calendarDiv = document.createElement("div");
-  calendarDiv.id = 'calendar';
-  calendarDiv.style = "z-index: 300; background-color: white; position: absolute; height: 100%;"
-  document.getElementById('maindetail').appendChild(calendarDiv);
 
   var calendarEl = document.getElementById('calendar');
 
@@ -497,6 +478,7 @@ function createCalendar(dayData, fullcalendarEvents) {
             })
           })
           setAllData2(daysMap);
+          document.getElementById('loginPanel').style.display = "none";
         }.bind(this)
       }
     },
@@ -545,7 +527,6 @@ function createCalendar(dayData, fullcalendarEvents) {
   window.calendar = calendar;
 
   calendar.render();
-  alert('Scroll to bottom');
 
   getDays().forEach((day) => {
     calendar.addEvent({
