@@ -720,7 +720,7 @@ function handleResponse(response, user, calendarUsername) {
         type: "calendar"
       };
     });
-    createCalendar();
+    createCalendar(dayDate, fullcalendarEvents);
   };
 
   request.send();
