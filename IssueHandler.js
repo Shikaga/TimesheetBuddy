@@ -1,25 +1,26 @@
-define(['StatCalculator'], function(StatCalculator) {
+define(["StatCalculator"], function(StatCalculator) {
   function IssueHandler() {
     this.issues = [];
   }
 
   IssueHandler.prototype.addIssue = function(issue) {
     this.issues.push(issue);
-  }
+  };
 
   IssueHandler.prototype.getIssue = function(issueId) {
-    for (var i=0; i < this.issues.length; i++) {
+    for (var i = 0; i < this.issues.length; i++) {
       var issue = this.issues[i];
       if (issue.id.match(/\d+/)[0] === issueId) {
         return issue;
       }
     }
     return null;
-  }
+  };
 
   getDataWithJSON = function(callback, username, password, requestUrl) {
     var xhr = new XMLHttpRequest();
-    xhr.open("GET", "https://cors-anywhere.herokuapp.com/" + requestUrl)
+    xhr.withCredentials = true;
+    xhr.open("GET", requestUrl);
     if (this.username !== "") {
       this.setAuthorizationHeader(xhr, username, password);
     }
@@ -31,16 +32,18 @@ define(['StatCalculator'], function(StatCalculator) {
       } else {
         callback(response);
       }
-    }
+    };
   };
 
   setAuthorizationHeader = function(xhr, username, password) {
-    var authHeader = "Basic "+btoa(username + ":" + password);
+    var authHeader = "Basic " + btoa(username + ":" + password);
     xhr.setRequestHeader("Authorization", authHeader);
-  }
+  };
 
   if (window.localStorage.getItem("jiraData")) {
-    statisticsCalculator = new StatCalculator(JSON.parse(window.localStorage.getItem("jiraData")).issues);
+    statisticsCalculator = new StatCalculator(
+      JSON.parse(window.localStorage.getItem("jiraData")).issues
+    );
   }
 
   return IssueHandler;

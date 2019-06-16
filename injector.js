@@ -64,7 +64,9 @@ function insertBefore(referenceNode, newNode) {
 function roundTimeQuarterHour(time) {
   var timeToReturn = new Date(time);
 
-  timeToReturn.setMilliseconds(Math.round(time.getMilliseconds() / 1000) * 1000);
+  timeToReturn.setMilliseconds(
+    Math.round(time.getMilliseconds() / 1000) * 1000
+  );
   timeToReturn.setSeconds(Math.round(timeToReturn.getSeconds() / 60) * 60);
   timeToReturn.setMinutes(Math.round(timeToReturn.getMinutes() / 15) * 15);
   return timeToReturn;
@@ -106,12 +108,19 @@ function addClickEventsToDate() {
   }
 }
 
-function getCardDiv(jiraId, jiraSummary, timeElapsed, duration, status, onclick) {
+function getCardDiv(
+  jiraId,
+  jiraSummary,
+  timeElapsed,
+  duration,
+  status,
+  onclick
+) {
   var newJiraTicket = document.createElement("div");
   newJiraTicket.onclick = function() {
     onclick();
     newJiraTicket.style.display = "none";
-  }
+  };
   newJiraTicket.style =
     "float: left; display:inline-block; margin: 10px; width: 200px; overflow:hidden; border: 1px solid black; padding: 5px;";
 
@@ -160,7 +169,7 @@ function getRowInfo(rowId) {
 function setRowData(rowId, data) {
   for (var i = 0; i < 7; i++) {
     if (data[i]) {
-      addCellData(rowId, i, Math.round((data[i]) * 100) / 100)
+      addCellData(rowId, i, Math.round(data[i] * 100) / 100);
     }
   }
 }
@@ -168,7 +177,8 @@ function setRowData(rowId, data) {
 function addCellData(rowId, dayOfWeekNum, hoursToAdd) {
   var tableElements = document.getElementById("timesheettable").children;
   var row = tableElements[rowId];
-  const box = row.children[0].children[7 + dayOfWeekNum].children[2].children[0];
+  const box =
+    row.children[0].children[7 + dayOfWeekNum].children[2].children[0];
   var currentHours = Number.parseFloat(box.value) || 0;
   if (hoursToAdd !== undefined && hoursToAdd !== null) {
     box.value = currentHours + hoursToAdd;
@@ -220,8 +230,9 @@ function getRowIdFromTimesheet(timesheetString) {
 function addLoginPanel() {
   var headerBar = document.getElementById("TSWOptions");
   var loginPanel = document.createElement("div");
-  loginPanel.id = "loginPanel"
-  loginPanel.style = "z-index: 300; background-color: white; position: fixed; height: 100%; top: 0; left: 0"
+  loginPanel.id = "loginPanel";
+  loginPanel.style =
+    "z-index: 300; background-color: white; position: fixed; height: 100%; top: 0; left: 0";
 
   var usernameLabel = document.createElement("span");
   usernameLabel.innerHTML = "Username";
@@ -257,8 +268,9 @@ function addLoginPanel() {
   loadingLabel.id = "loading";
 
   var calendarDiv = document.createElement("div");
-  calendarDiv.id = 'calendar';
-  calendarDiv.style = "z-index: 300; background-color: white; position: absolute; height: 100%;"
+  calendarDiv.id = "calendar";
+  calendarDiv.style =
+    "z-index: 300; background-color: white; position: absolute; height: 100%;";
 
   var loginButton = document.createElement("button");
   loginButton.innerHTML = "Login";
@@ -270,7 +282,13 @@ function addLoginPanel() {
     localStorage.setItem("email", email.value);
     localStorage.setItem("projects", projects.value);
     loadingLabel.innerHTML = "Loading...";
-    loadData(username.value, password.value, username.value, email.value, projects.value.split(","));
+    loadData(
+      username.value,
+      password.value,
+      username.value,
+      email.value,
+      projects.value.split(",")
+    );
   };
 
   loginPanel.appendChild(usernameLabel);
@@ -290,7 +308,13 @@ function addLoginPanel() {
   insertBefore(headerBar, loginPanel);
 }
 
-function loadData(loginUsername, password, jiraUsername, calendarUsername, projectIds) {
+function loadData(
+  loginUsername,
+  password,
+  jiraUsername,
+  calendarUsername,
+  projectIds
+) {
   getDataWithJSON(
     function(response) {
       handleResponse(response, jiraUsername, calendarUsername); //change this when testing
@@ -330,7 +354,10 @@ function getDays() {
 
 function getDaysMap(startingValue) {
   return getDays().reduce(function(map, obj) {
-    map.set(obj,typeof startingValue == "function" ? new startingValue() : startingValue)
+    map.set(
+      obj,
+      typeof startingValue == "function" ? new startingValue() : startingValue
+    );
     return map;
   }, new Map());
 }
@@ -351,19 +378,19 @@ function checkRowExistsForAllCode(codes) {
   for (let i = 0; i < rowNum; i++) {
     var row = getRowInfo(i);
     if (row) {
-      allCodesAdded.push(row.phase + " " + row.client + " - " + row.project + "-" + row.stage);
+      allCodesAdded.push(
+        row.phase + " " + row.client + " - " + row.project + "-" + row.stage
+      );
     }
   }
   Array.from(codes).forEach(function(code) {
     if (allCodesAdded.includes(code)) {
-
     } else {
-      console.log("This code is missing:", code)
-      alert(("The following code is missing, check console: " + code))
+      console.log("This code is missing:", code);
+      alert("The following code is missing, check console: " + code);
     }
-  })
+  });
 }
-
 
 function setAllData2(weekData) {
   var rowNum = document.getElementById("timesheettable").children.length;
@@ -372,12 +399,12 @@ function setAllData2(weekData) {
     if (row) {
       var code =
         row.phase + " " + row.client + " - " + row.project + "-" + row.stage;
-      var timeData = [0,0,0,0,0,0,0];
+      var timeData = [0, 0, 0, 0, 0, 0, 0];
       weekData.forEach((codeMap, day) => {
         if (codeMap.get(code)) {
-          timeData[day.getDay()-1] = codeMap.get(code)
+          timeData[day.getDay() - 1] = codeMap.get(code);
         }
-      })
+      });
       console.log(timeData);
       setRowData(i, timeData);
     }
@@ -394,10 +421,19 @@ function setAllData(data) {
       var timeData = [];
       for (let j = 0; j < data.length; j++) {
         if (data[j].get(code)) {
-          timeData[j] = data[j].get(code).reduce((a,b) => a + b.hours, 0);
+          timeData[j] = data[j].get(code).reduce((a, b) => a + b.hours, 0);
           data[j].get(code).map(function(e) {
-            addCardFromData(i, e.jira.id, e.jira.summary, (Math.round((e.hours) * 100) / 100), e.startTime+"-"+e.endTime, "statusTBD", i, j)
-          })
+            addCardFromData(
+              i,
+              e.jira.id,
+              e.jira.summary,
+              Math.round(e.hours * 100) / 100,
+              e.startTime + "-" + e.endTime,
+              "statusTBD",
+              i,
+              j
+            );
+          });
         }
       }
       setRowData(i, timeData);
@@ -406,24 +442,45 @@ function setAllData(data) {
 }
 
 function hoursBetweenTwoDates(firstDate, secondDate) {
-  return firstDate ? (secondDate - firstDate) / 3600000 : 1.0
+  return firstDate ? (secondDate - firstDate) / 3600000 : 1.0;
 }
 
 function setDaySummary(calendar) {
-  var summaries = calendar.getEvents().filter((event) => {
-    return (event.extendedProps.type == "summary")
-  })
-  var jirasCalendars = calendar.getEvents().filter((event) => {
-    return (event.extendedProps.type == "jira" || event.extendedProps.type == "calendar")
-  })
-  summaries.forEach((summary) => {
-    var events = jirasCalendars.filter((event) => 
-      event.extendedProps.day == summary.extendedProps.day && event.extendedProps.hasCode && !event.extendedProps.ignore)
-      summary.setProp("title", events.map((event) => hoursBetweenTwoDates(event.start, event.end)).reduce((a,b) => a+b, 0) + " hrs")
-  })
+  var summaries = calendar.getEvents().filter(event => {
+    return event.extendedProps.type == "summary";
+  });
+  var jirasCalendars = calendar.getEvents().filter(event => {
+    return (
+      event.extendedProps.type == "jira" ||
+      event.extendedProps.type == "calendar"
+    );
+  });
+  summaries.forEach(summary => {
+    var events = jirasCalendars.filter(
+      event =>
+        event.extendedProps.day == summary.extendedProps.day &&
+        event.extendedProps.hasCode &&
+        !event.extendedProps.ignore
+    );
+    summary.setProp(
+      "title",
+      events
+        .map(event => hoursBetweenTwoDates(event.start, event.end))
+        .reduce((a, b) => a + b, 0) + " hrs"
+    );
+  });
 }
 
-function addCardFromData(rowId, jiraId, jiraSummary, timeElapsed, duration, status, rowId, dayOfWeekNum) {
+function addCardFromData(
+  rowId,
+  jiraId,
+  jiraSummary,
+  timeElapsed,
+  duration,
+  status,
+  rowId,
+  dayOfWeekNum
+) {
   addCardsToRow(
     rowId,
     getCardDiv(
@@ -433,8 +490,8 @@ function addCardFromData(rowId, jiraId, jiraSummary, timeElapsed, duration, stat
       duration,
       status,
       function() {
-        addCellData(rowId, dayOfWeekNum, 0-timeElapsed);
-    }
+        addCellData(rowId, dayOfWeekNum, 0 - timeElapsed);
+      }
     )
   );
 }
@@ -442,16 +499,20 @@ function addCardFromData(rowId, jiraId, jiraSummary, timeElapsed, duration, stat
 function createCalendar(dayData, fullcalendarEvents) {
   dayData.forEach((day, dayId) => {
     day.forEach((issues, codeId) => {
-      issues.forEach((issue) => {
+      issues.forEach(issue => {
         var today = getDays()[dayId];
-        var minDate = new Date(today.getTime() + 9*1000*60*60);
-        var startTime = roundTimeQuarterHour(new Date(Math.max(minDate, issue.startTime)))
-        var maxDate = new Date(today.getTime() + 17.5*1000*60*60);
-        var endTime = roundTimeQuarterHour(new Date(Math.min(maxDate, issue.endTime)))
+        var minDate = new Date(today.getTime() + 9 * 1000 * 60 * 60);
+        var startTime = roundTimeQuarterHour(
+          new Date(Math.max(minDate, issue.startTime))
+        );
+        var maxDate = new Date(today.getTime() + 17.5 * 1000 * 60 * 60);
+        var endTime = roundTimeQuarterHour(
+          new Date(Math.min(maxDate, issue.endTime))
+        );
         fullcalendarEvents.push({
           title: issue.jira.id + ": " + issue.jira.summary,
           start: startTime.toISOString(),
-          day: startTime.toISOString().substr(0,10),
+          day: startTime.toISOString().substr(0, 10),
           end: endTime.toISOString(),
           hasCode: !!codeId,
           code: codeId,
@@ -460,45 +521,60 @@ function createCalendar(dayData, fullcalendarEvents) {
           defaultColor: !!codeId ? "green" : "lightgreen",
           type: "jira"
         });
-      })
-    })
-  })
+      });
+    });
+  });
 
-  var calendarEl = document.getElementById('calendar');
+  var calendarEl = document.getElementById("calendar");
 
   var calendar = new FullCalendar.Calendar(calendarEl, {
-    plugins: [ 'interaction', 'dayGrid', 'timeGrid', 'list' ],
+    plugins: ["interaction", "dayGrid", "timeGrid", "list"],
     customButtons: {
       exportButton: {
-        text: 'Export!',
+        text: "Export!",
         click: function() {
           var daysMap = getDaysMap(Map);
           daysMap.forEach((map, date) => {
-            var events = calendar.getEvents().filter((event) => 
-                          event.extendedProps.hasCode && 
-                          !event.extendedProps.ignore &&
-                          new Date(date.getTime() + 2 * 3600000).toISOString().substr(0,10) == event.start.toISOString().substr(0,10)); //lol this hack is hilarous
-            events.forEach((event) => {
-              map.set(event.extendedProps.code, map.get(event.extendedProps.code) || 0);
-              map.set(event.extendedProps.code, map.get(event.extendedProps.code) + hoursBetweenTwoDates(event.start, event.end))
-            })
-          })
+            var events = calendar
+              .getEvents()
+              .filter(
+                event =>
+                  event.extendedProps.hasCode &&
+                  !event.extendedProps.ignore &&
+                  new Date(date.getTime() + 2 * 3600000)
+                    .toISOString()
+                    .substr(0, 10) == event.start.toISOString().substr(0, 10)
+              ); //lol this hack is hilarous
+            events.forEach(event => {
+              map.set(
+                event.extendedProps.code,
+                map.get(event.extendedProps.code) || 0
+              );
+              map.set(
+                event.extendedProps.code,
+                map.get(event.extendedProps.code) +
+                  hoursBetweenTwoDates(event.start, event.end)
+              );
+            });
+          });
           setAllData2(daysMap);
-          document.getElementById('loginPanel').style.display = "none";
+          document.getElementById("loginPanel").style.display = "none";
         }.bind(this)
       }
     },
     header: {
-      left: '',
+      left: "",
       // left: '',
-      center: 'title',
+      center: "title",
       // right: 'timeGridWeek'
-      right: 'exportButton'
+      right: "exportButton"
     },
-    defaultView: 'timeGridWeek',
-    defaultDate: new Date(getDays()[0].getTime()+ 7200000).toISOString().substr(0,10),
-    snapDuration: '00:15',
-    slotDuration: '00:15',
+    defaultView: "timeGridWeek",
+    defaultDate: new Date(getDays()[0].getTime() + 7200000)
+      .toISOString()
+      .substr(0, 10),
+    snapDuration: "00:15",
+    slotDuration: "00:15",
     editable: true,
     firstDay: 1,
     navLinks: true, // can click day/week names to navigate views
@@ -511,22 +587,34 @@ function createCalendar(dayData, fullcalendarEvents) {
         info.event.setProp("backgroundColor", "red");
         info.event.setExtendedProp("ignore", true);
       } else {
-        info.event.setProp("backgroundColor", info.event.extendedProps.defaultColor);
+        info.event.setProp(
+          "backgroundColor",
+          info.event.extendedProps.defaultColor
+        );
         info.event.setExtendedProp("ignore", false);
       }
-      setTimeout(function() {
-        setDaySummary(this);
-      }.bind(this),0);
+      setTimeout(
+        function() {
+          setDaySummary(this);
+        }.bind(this),
+        0
+      );
     },
     eventResizeStop: function() {
-      setTimeout(function() {
-        setDaySummary(this);
-      }.bind(this),0);
+      setTimeout(
+        function() {
+          setDaySummary(this);
+        }.bind(this),
+        0
+      );
     },
     eventDragStop: function() {
-      setTimeout(function() {
-        setDaySummary(this);
-      }.bind(this),0);
+      setTimeout(
+        function() {
+          setDaySummary(this);
+        }.bind(this),
+        0
+      );
     },
     events: fullcalendarEvents
   });
@@ -534,15 +622,15 @@ function createCalendar(dayData, fullcalendarEvents) {
 
   calendar.render();
 
-  getDays().forEach((day) => {
+  getDays().forEach(day => {
     calendar.addEvent({
       title: "0 hrs",
-      start: day.toISOString().substr(0,10),
-      day: day.toISOString().substr(0,10),
+      start: day.toISOString().substr(0, 10),
+      day: day.toISOString().substr(0, 10),
       type: "summary"
-    })
-  })
-  setDaySummary(calendar)
+    });
+  });
+  setDaySummary(calendar);
 }
 
 function handleResponse(response, user, calendarUsername) {
@@ -578,49 +666,66 @@ function handleResponse(response, user, calendarUsername) {
   var extractedData = extrator.extractData(yourData, user);
   var days = getDays();
   var dayData = getAllData(extractedData, days);
-  var uniqueCodes = dayData.reduce((a,b) => a.concat(a.concat([...b.keys()])), []).reduce(function(set, obj) {
-    set.add(obj)
-    return set;
-  }, new Set());
+  var uniqueCodes = dayData
+    .reduce((a, b) => a.concat(a.concat([...b.keys()])), [])
+    .reduce(function(set, obj) {
+      set.add(obj);
+      return set;
+    }, new Set());
   uniqueCodes.delete(null);
   checkRowExistsForAllCode(uniqueCodes);
 
-  var jirasWithoutCodes = dayData.reduce((a,b) => a.concat(b.get(null) || []), []).reduce((a,b) => a.concat(b.jira.id),[]).reduce(function(set, obj) {
-    set.add(obj)
-    return set;
-  }, new Set());
+  var jirasWithoutCodes = dayData
+    .reduce((a, b) => a.concat(b.get(null) || []), [])
+    .reduce((a, b) => a.concat(b.jira.id), [])
+    .reduce(function(set, obj) {
+      set.add(obj);
+      return set;
+    }, new Set());
   if (jirasWithoutCodes.size > 0) {
     console.log("The following Jiras have no codes", jirasWithoutCodes);
-    alert(jirasWithoutCodes.size + " Jiras don't have associated timesheet codes. Check console and discuss with your PO or PM");
+    alert(
+      jirasWithoutCodes.size +
+        " Jiras don't have associated timesheet codes. Check console and discuss with your PO or PM"
+    );
   }
 
   var request = new XMLHttpRequest();
   var days = getDays();
-  // request.open('GET', 'http://localhost:3000?user=' + calendarUsername + '&startTime=' + new Date(getDays()[0].getTime()+ 7200000).toISOString().substr(0,10) + 'T00:00:00.000Z&endTime=' + new Date(getDays()[6].getTime()+ 7200000).toISOString().substr(0,10) + 'T23:00:00.898Z', true)
-  // request.onload = function (response) {
-  //   var events = JSON.parse(response.target.response)
-  //   var fullcalendarEvents = events.map((event) => {
-  //     var code = event.timesheetCode == "No Code" ? null : event.timesheetCode;
-  //     return {
-  //       title: event.summary,
-  //       start: event.startTime,
-  //       day: event.startTime.substr(0,10),
-  //       end: event.endTime,
-  //       backgroundColor: !!code ? "blue" : "lightblue",
-  //       defaultColor: !!code ? "blue" : "lightblue",
-  //       hasCode: !!code,
-  //       code: code,
-  //       ignore: false,
-  //       type: "calendar"
-  //     }
-  //   })
-  //   //createCalendar();
-    
-  // }
+  request.open(
+    "GET",
+    "http://localhost:3000?user=" +
+      calendarUsername +
+      "&startTime=" +
+      new Date(getDays()[0].getTime() + 7200000).toISOString().substr(0, 10) +
+      "T00:00:00.000Z&endTime=" +
+      new Date(getDays()[6].getTime() + 7200000).toISOString().substr(0, 10) +
+      "T23:00:00.898Z",
+    true
+  );
+  request.onload = function(response) {
+    var events = JSON.parse(response.target.response);
+    var fullcalendarEvents = events.map(event => {
+      var code = event.timesheetCode == "No Code" ? null : event.timesheetCode;
+      return {
+        title: event.summary,
+        start: event.startTime,
+        day: event.startTime.substr(0, 10),
+        end: event.endTime,
+        backgroundColor: !!code ? "blue" : "lightblue",
+        defaultColor: !!code ? "blue" : "lightblue",
+        hasCode: !!code,
+        code: code,
+        ignore: false,
+        type: "calendar"
+      };
+    });
+    createCalendar();
+  };
 
-  // request.send()
+  request.send();
 
-  // setAllData(dayData);
+  setAllData(dayData);
 
   createCalendar(dayData, []);
 
@@ -640,7 +745,8 @@ function handleResponse(response, user, calendarUsername) {
 
 getDataWithJSON = function(callback, username, password, requestUrl) {
   var xhr = new XMLHttpRequest();
-  xhr.open("GET", "https://cors-anywhere.herokuapp.com/" + requestUrl);
+  xhr.withCredentials = true;
+  xhr.open("GET", requestUrl);
   if (this.username !== "") {
     this.setAuthorizationHeader(xhr, username, password);
   }
@@ -648,10 +754,14 @@ getDataWithJSON = function(callback, username, password, requestUrl) {
   xhr.send();
   xhr.onload = function(response) {
     if (this.status === 200) {
-      document.getElementById('loading').innerHTML = "";
+      document.getElementById("loading").innerHTML = "";
       callback(response);
     } else {
-      alert("Response: " + this.status + ". Something went wrong. Refresh and try again?")
+      alert(
+        "Response: " +
+          this.status +
+          ". Something went wrong. Refresh and try again?"
+      );
       callback(this.status);
     }
   };
