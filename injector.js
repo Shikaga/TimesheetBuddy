@@ -694,7 +694,7 @@ function handleResponse(response, user, calendarUsername) {
   var days = getDays();
   request.open(
     "GET",
-    "http://localhost:3000?user=" +
+    "http://andrewv-xps13:3000?user=" +
       calendarUsername +
       "&startTime=" +
       new Date(getDays()[0].getTime() + 7200000).toISOString().substr(0, 10) +
@@ -720,7 +720,7 @@ function handleResponse(response, user, calendarUsername) {
         type: "calendar"
       };
     });
-    createCalendar(dayDate, fullcalendarEvents);
+    createCalendar(dayData, fullcalendarEvents);
   };
 
   request.send();
