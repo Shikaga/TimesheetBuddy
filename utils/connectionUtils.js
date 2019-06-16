@@ -1,7 +1,7 @@
 export function getDataWithJSON(callback, username, password, requestUrl) {
   var xhr = new XMLHttpRequest();
   xhr.withCredentials = true;
-  xhr.open("GET", requestUrl);
+  xhr.open("GET", "https://serene-ravine-70062.herokuapp.com/" + requestUrl);
   setAuthorizationHeader(xhr, username, password);
   xhr.setRequestHeader("x-requested-with", "love");
   xhr.send();

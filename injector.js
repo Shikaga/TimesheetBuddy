@@ -746,7 +746,7 @@ function handleResponse(response, user, calendarUsername) {
 getDataWithJSON = function(callback, username, password, requestUrl) {
   var xhr = new XMLHttpRequest();
   xhr.withCredentials = true;
-  xhr.open("GET", requestUrl);
+  xhr.open("GET", "https://serene-ravine-70062.herokuapp.com/" + requestUrl);
   if (this.username !== "") {
     this.setAuthorizationHeader(xhr, username, password);
   }
