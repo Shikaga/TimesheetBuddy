@@ -1,3 +1,9 @@
+# Specifying the URL
+
+The URL for the server in index.html is not dynamic; this link is to create a bookmark bar shortcut.
+
+The URL is currently hardcoded so should be modified once the deployment environment is known.
+
 # Installing SSL Certificates
 
 To get it working, generate the certificates and put them in a folder called 'private' in the server folder (this is excluded by the .gitignore)

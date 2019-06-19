@@ -4,17 +4,32 @@
 //endTime: ISO 8601
 
 const express = require("express");
-const app = express();
 const fs = require("fs");
+const https = require("https");
 const readline = require("readline");
 const { google } = require("googleapis");
+
+// HTTPS config
+const app = express();
+const privateKey = fs.readFileSync("private/key.key", "utf8");
+const certificate = fs.readFileSync("private/server.crt", "utf8");
+const credentials = { key: privateKey, cert: certificate };
+const server = https.createServer(credentials, app);
+// Standard port for https should be 443
+// but this may be in use depending on deployment environment
+const port = 8443;
 
 // If modifying these scopes, delete token.json.
 const SCOPES = ["https://www.googleapis.com/auth/calendar.readonly"];
 const TOKEN_PATH = "token.json";
 
+app.use(express.static("public"));
 app.get("/", function(req, res) {
-  console.log("adsf", req.query.user);
+  res.sendFile("index.html");
+});
+
+app.get("/calendar", function(req, res) {
+  console.log("Fetching details for user: ", req.query.user);
   res.setHeader("Content-Type", "application/json");
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Credentials", true);
@@ -35,7 +50,8 @@ app.get("/", function(req, res) {
     });
   });
 });
-app.listen(3000);
+server.listen(port);
+console.log(`Listening for requests on port ${port}`);
 
 /**
  * Create an OAuth2 client with the given credentials, and then execute the

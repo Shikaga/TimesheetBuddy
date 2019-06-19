@@ -694,7 +694,7 @@ function handleResponse(response, user, calendarUsername) {
   var days = getDays();
   request.open(
     "GET",
-    "http://andrewv-xps13:3000?user=" +
+    "https://andrewv-xps13:8443/calendar?user=" +
       calendarUsername +
       "&startTime=" +
       new Date(getDays()[0].getTime() + 7200000).toISOString().substr(0, 10) +
