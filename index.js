@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 //query:
 //user: emailAddress
 //startTime: ISO 8601
@@ -51,7 +52,7 @@ app.get("/calendar", function(req, res) {
   });
 });
 server.listen(port);
-console.log(`Listening for requests on port ${port}`);
+console.log("Listening for requests on port " + port);
 
 /**
  * Create an OAuth2 client with the given credentials, and then execute the
